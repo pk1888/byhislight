@@ -1,0 +1,6 @@
+{
+  "name": "By His Light",
+  "description": "A quiet digital chapel where lighting a candle on the web physically lights candles on Paul's home altar in Scotland, hosted on a Raspberry Pi Zero 2 W.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
