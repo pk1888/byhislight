@@ -1,5 +1,6 @@
 import React from 'react';
 import { AppSettings } from '../types';
+import { formatUptime } from '../utils/format';
 
 interface FooterProps {
   settings: AppSettings;
@@ -17,15 +18,6 @@ interface PiStatus {
     label: string;
   };
 }
-
-const formatUptime = (seconds: number): string => {
-  const days = Math.floor(seconds / 86400);
-  const hours = Math.floor((seconds % 86400) / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  if (days > 0) return `${days}d ${hours}h ${minutes}m`;
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  return `${minutes}m`;
-};
 
 export const Footer: React.FC<FooterProps> = ({ settings }) => {
   const [scotlandTime, setScotlandTime] = React.useState<string>('08:35');

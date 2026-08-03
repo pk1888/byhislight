@@ -3,6 +3,7 @@ import { AppSettings } from '../types';
 import { ChapelCross } from './ChapelCross';
 import { FlameVisual } from './FlameVisual';
 import { Sparkles, Server } from 'lucide-react';
+import { formatUptime } from '../utils/format';
 
 interface AboutViewProps {
   settings: AppSettings;
@@ -22,9 +23,23 @@ interface HealthTelemetry {
   attribution: string;
 }
 
+interface PiStatus {
+  online: boolean;
+  device: string;
+  hostname: string;
+  cpuTempC: number | null;
+  uptimeSeconds: number;
+  relayStatus: {
+    connected: boolean;
+    pin: string;
+    label: string;
+  };
+}
+
 export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
   const isDark = settings.theme === 'candlelight' || settings.theme === 'stone';
   const [healthData, setHealthData] = useState<HealthTelemetry | null>(null);
+  const [piStatus, setPiStatus] = useState<PiStatus | null>(null);
 
   // Dynamic age calculation based on DOB 01/03/1984 (March 1, 1984)
   const calculateAge = (birthDateString: string): number => {
@@ -45,6 +60,13 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
       .then(res => res.json())
       .then(data => setHealthData(data))
       .catch(err => console.debug('Health check fail:', err));
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/pi/status')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => setPiStatus(data))
+      .catch(err => console.debug('Pi status fail:', err));
   }, []);
 
   return (
@@ -217,6 +239,24 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
                 </div>
               </div>
             </div>
+
+            {/* Live Raspberry Pi node vitals - quiet, minimal */}
+            {piStatus && (
+              <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-[11px] font-sans tracking-wide text-stone-500 dark:text-stone-400">
+                <span className="flex items-center space-x-1.5">
+                  <span className="relative flex h-1.5 w-1.5 items-center justify-center">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+                  </span>
+                  <span>Chapel Node Online</span>
+                </span>
+                {piStatus.cpuTempC !== null && (
+                  <span>CPU {piStatus.cpuTempC.toFixed(1)}°C</span>
+                )}
+                <span>Hostname: {piStatus.hostname}</span>
+                <span>Up {formatUptime(piStatus.uptimeSeconds)}</span>
+              </div>
+            )}
 
             <div className="flex flex-wrap justify-between items-center text-xs text-stone-500 dark:text-stone-400 border-t pt-3 border-stone-400/20 font-sans gap-2">
               <span>Node: {healthData.system}</span>

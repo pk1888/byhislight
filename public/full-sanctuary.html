@@ -104,6 +104,26 @@
       color: #7A7265;
       line-height: 1.5;
     }
+    .pi-vitals {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 4px 16px;
+      margin-top: 10px;
+      font-size: 0.7rem;
+      letter-spacing: 0.03em;
+      color: #8A8272;
+    }
+    .pi-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background-color: #4CAF50;
+      box-shadow: 0 0 6px #4CAF50;
+      margin-right: 5px;
+      animation: pulse 2.5s infinite ease-in-out;
+    }
     .retry-countdown {
       font-size: 0.8rem;
       color: #A39682;
@@ -138,6 +158,7 @@
     <div class="footer-telemetry">
       Raspberry Pi Zero 2 W on Paul's Home Altar in Scotland<br>
       Inverclyde, Scotland • Real-Time Altar Candle Relay Active
+      <div class="pi-vitals" id="piVitals"></div>
     </div>
   </div>
 
@@ -154,6 +175,37 @@
         window.location.href = '/';
       }
     }, 1000);
+
+    const formatUptime = (totalSeconds) => {
+      const days = Math.floor(totalSeconds / 86400);
+      const hours = Math.floor((totalSeconds % 86400) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+      if (hours > 0) return `${hours}h ${minutes}m`;
+      return `${minutes}m`;
+    };
+
+    const piVitalsEl = document.getElementById('piVitals');
+    fetch('/api/pi/status')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (!piVitalsEl || !data) return;
+        const parts = [];
+        if (data.online) {
+          parts.push('<span><span class="pi-dot"></span>Online</span>');
+        }
+        if (data.cpuTempC !== null && data.cpuTempC !== undefined) {
+          parts.push(`<span>CPU ${data.cpuTempC.toFixed(1)}°C</span>`);
+        }
+        if (data.hostname) {
+          parts.push(`<span>Hostname: ${data.hostname}</span>`);
+        }
+        if (data.uptimeSeconds) {
+          parts.push(`<span>Up ${formatUptime(data.uptimeSeconds)}</span>`);
+        }
+        piVitalsEl.innerHTML = parts.join('');
+      })
+      .catch(() => {});
   </script>
 </body>
 </html>
