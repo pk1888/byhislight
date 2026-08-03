@@ -89,12 +89,27 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
         }`}>
           "For where two or three are gathered together in My name, there am I in the midst of them" - Matthew 18:20
         </p>
+
+        <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 pt-2">
+          <a href="#journey" className="text-sm font-sans font-medium text-[#D4AF37] hover:underline underline-offset-4">
+            My Journey
+          </a>
+          <a href="#creation" className="text-sm font-sans font-medium text-[#D4AF37] hover:underline underline-offset-4">
+            Wonder of Creation
+          </a>
+          <a href="#chapel" className="text-sm font-sans font-medium text-[#D4AF37] hover:underline underline-offset-4">
+            The Chapel
+          </a>
+          <a href="#node-stats" className="text-sm font-sans font-medium text-[#D4AF37] hover:underline underline-offset-4">
+            Home Altar Node
+          </a>
+        </nav>
       </div>
 
       {/* Main Container / Sections Stack */}
       <div className="space-y-8">
         {/* Section 1: Welcome & A Personal Journey */}
-        <div className={`p-8 sm:p-10 rounded-2xl border space-y-6 shadow-sm ${
+        <div id="journey" className={`p-8 sm:p-10 rounded-2xl border space-y-6 shadow-sm scroll-mt-40 sm:scroll-mt-36 ${
           isDark
             ? 'bg-[#1b1916] border-[#332e27] text-[#ece4d6]'
             : 'bg-[#faf6ee] border-[#ebdcc8] text-[#2d2922]'
@@ -129,7 +144,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
         </div>
 
         {/* Section 2: Wonder of Creation */}
-        <div className={`p-8 sm:p-10 rounded-2xl border space-y-6 shadow-sm ${
+        <div id="creation" className={`p-8 sm:p-10 rounded-2xl border space-y-6 shadow-sm scroll-mt-40 sm:scroll-mt-36 ${
           isDark
             ? 'bg-[#1b1916] border-[#332e27] text-[#ece4d6]'
             : 'bg-[#faf6ee] border-[#ebdcc8] text-[#2d2922]'
@@ -152,7 +167,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
         </div>
 
         {/* Section 3: The Micro-Chapel Mission */}
-        <div className={`p-8 sm:p-10 rounded-2xl border space-y-6 shadow-sm ${
+        <div id="chapel" className={`p-8 sm:p-10 rounded-2xl border space-y-6 shadow-sm scroll-mt-40 sm:scroll-mt-36 ${
           isDark
             ? 'bg-[#1b1916] border-[#332e27] text-[#ece4d6]'
             : 'bg-[#faf6ee] border-[#ebdcc8] text-[#2d2922]'
@@ -211,7 +226,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
 
         {/* Home Altar telemetry */}
         {healthData && (
-          <div className={`p-6 sm:p-8 rounded-2xl border font-sans space-y-5 transition-all shadow-sm ${
+          <div id="node-stats" className={`p-6 sm:p-8 rounded-2xl border font-sans space-y-5 transition-all shadow-sm scroll-mt-40 sm:scroll-mt-36 ${
             isDark ? 'bg-[#1b1916] border-[#332e27] text-[#ece4d6]' : 'bg-[#faf6ee] border-[#ebdcc8] text-[#1A2A40]'
           }`}>
             <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-3 border-stone-400/20">
@@ -221,58 +236,60 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
               </div>
               <div className="flex items-center space-x-1.5 text-xs text-[#c5a059] font-medium">
                 <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span>Connected to my prayer altar in Scotland</span>
+                <span>Online</span>
               </div>
             </div>
 
-            <p className="font-sans italic text-base sm:text-lg leading-relaxed text-stone-700 dark:text-stone-100 font-medium">
-              "{healthData.tagline}"
+            <p className="font-sans text-base sm:text-lg leading-relaxed text-stone-600 dark:text-stone-300">
+              For my fellow techy brothers and sisters, here are the live stats straight from the little Pi.
             </p>
+
+            <div className="rounded-xl border border-[#2d2822] bg-[#0f0e0c] overflow-hidden shadow-inner">
+              <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-[#2d2822] bg-[#16140f]">
+                <span className="w-3 h-3 rounded-full bg-[#f25f5c]/80" />
+                <span className="w-3 h-3 rounded-full bg-[#f7c948]/80" />
+                <span className="w-3 h-3 rounded-full bg-[#3aa76d]/80" />
+                <span className="ml-2 font-mono text-xs text-[#8a8477]">
+                  paul@byhislight — ssh pi@byhislight.faith
+                </span>
+              </div>
+              <div className="px-5 py-4 font-mono text-sm leading-relaxed overflow-x-auto">
+                <p className="text-[#8a8477]">
+                  <span className="text-[#D4AF37] font-semibold">$</span> neofetch
+                </p>
+                <div className="mt-3 space-y-1.5">
+                  {[
+                    { key: 'Node', value: piStatus?.device ?? healthData.system },
+                    { key: 'Location', value: healthData.location },
+                    { key: 'Frontend', value: 'React 19 + TypeScript' },
+                    { key: 'Backend', value: 'Node.js + Express' },
+                    { key: 'Build', value: 'Vite + esbuild' },
+                    { key: 'Storage', value: 'JSON (no SQL)' },
+                    { key: 'Deployment', value: 'GitHub → systemd' },
+                    { key: 'Hosting', value: 'Self-hosted from my home' },
+                    { key: 'Serving Since', value: '1 August 2026' },
+                    { key: 'Uptime', value: formatUptimeWords(piStatus?.uptimeSeconds ?? healthData.uptimeSeconds) },
+                    ...(piStatus && piStatus.cpuTempC !== null ? [{ key: 'CPU Temp', value: `${piStatus.cpuTempC.toFixed(1)}°C` }] : []),
+                    ...(piStatus && piStatus.cpuLoadPercent !== null ? [{ key: 'CPU Load', value: `${piStatus.cpuLoadPercent}%` }] : []),
+                    ...(piStatus && piStatus.memoryUsedPercent !== null ? [{ key: 'Memory', value: `${piStatus.memoryUsedPercent}%` }] : []),
+                    ...(piStatus && piStatus.diskUsedPercent !== null ? [{ key: 'Disk', value: `${piStatus.diskUsedPercent}%` }] : []),
+                    ...(piStatus && piStatus.relayStatus ? [{ key: 'GPIO', value: `${piStatus.relayStatus.pin} (Candle Relay)` }] : []),
+                  ].map(row => (
+                    <p key={row.key} className="whitespace-pre">
+                      <span className="text-[#8a8477]">{row.key.padEnd(15, '.')}</span>
+                      <span className="text-[#D4AF37] font-medium">{row.value}</span>
+                    </p>
+                  ))}
+                </div>
+              </div>
+            </div>
 
             <p className="flex items-center justify-center gap-1.5 text-sm font-sans text-stone-500 dark:text-stone-300">
               🕯️ This altar has been quietly serving visitors for {formatUptimeWords(piStatus?.uptimeSeconds ?? healthData.uptimeSeconds)}.
             </p>
 
-            <div className="flex flex-col items-center justify-center gap-1.5 pt-1 text-sm sm:text-base font-sans text-stone-600 dark:text-stone-300">
-              <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-                <span>Altar Ready</span>
-                <span className="opacity-50">·</span>
-                <span>Inverclyde, Scotland</span>
-              </div>
-              <div>
-                <strong className="font-bold">Serving since</strong> <span className="text-[#D4AF37]">1 August 2026</span>
-              </div>
-              <div>
-                <strong className="font-bold">Uptime:</strong> <span className="text-[#D4AF37]">{formatUptimeWords(piStatus?.uptimeSeconds ?? healthData.uptimeSeconds)}</span>
-              </div>
-              <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
-                {piStatus && piStatus.cpuTempC !== null && (
-                  <span><strong className="font-bold">CPU</strong> <span className="text-[#D4AF37]">{piStatus.cpuTempC.toFixed(1)}°C</span></span>
-                )}
-                {piStatus && piStatus.cpuLoadPercent !== null && (
-                  <span className="flex items-center gap-x-2">
-                    <span className="opacity-50">·</span>
-                    <span><strong className="font-bold">Load</strong> <span className="text-[#D4AF37]">{piStatus.cpuLoadPercent}%</span></span>
-                  </span>
-                )}
-                {piStatus && piStatus.memoryUsedPercent !== null && (
-                  <span className="flex items-center gap-x-2">
-                    <span className="opacity-50">·</span>
-                    <span><strong className="font-bold">Memory</strong> <span className="text-[#D4AF37]">{piStatus.memoryUsedPercent}%</span></span>
-                  </span>
-                )}
-                {piStatus && piStatus.diskUsedPercent !== null && (
-                  <span className="flex items-center gap-x-2">
-                    <span className="opacity-50">·</span>
-                    <span><strong className="font-bold">Disk</strong> <span className="text-[#D4AF37]">{piStatus.diskUsedPercent}%</span></span>
-                  </span>
-                )}
-              </div>
-            </div>
-
             <div className="flex flex-wrap justify-between items-center text-xs text-stone-500 dark:text-stone-400 border-t pt-3 border-stone-400/20 font-sans gap-2">
-              <span>Node: {healthData.system}</span>
+              <span>byhislight.faith</span>
               <div className="flex items-center space-x-3">
                 <span>Local Time: {scotlandTime}</span>
                 <span className="text-[#D4AF37] font-semibold">{healthData.attribution}</span>
