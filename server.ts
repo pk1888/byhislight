@@ -1,6 +1,8 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
+import { exec } from 'child_process';
 import { createServer as createViteServer } from 'vite';
 
 const app = express();
@@ -282,6 +284,38 @@ app.get('/api/altar/status', (req, res) => {
     queueLength: db.candleQueue.length,
     lastPulseAt: db.lastAltarPulseAt || new Date().toISOString(),
     statusMessage: 'Connected to 5 physical LED votive candles on my home altar'
+  });
+});
+
+// Reads the Raspberry Pi CPU temperature (vcgencmd only exists on a Pi)
+function getCpuTemperature(): Promise<string | null> {
+  return new Promise((resolve) => {
+    exec('vcgencmd measure_temp', { timeout: 2000 }, (error, stdout) => {
+      if (error) {
+        resolve(null);
+        return;
+      }
+      const match = stdout.trim().match(/temp=([\d.]+)'C/);
+      resolve(match ? match[1] : null);
+    });
+  });
+}
+
+// GET live Raspberry Pi status (minimal, exposed data only)
+app.get('/api/pi/status', async (req, res) => {
+  const cpuTempC = await getCpuTemperature();
+
+  res.json({
+    online: true,
+    device: 'Raspberry Pi Zero 2 W',
+    hostname: os.hostname(),
+    cpuTempC: cpuTempC !== null ? parseFloat(cpuTempC) : null,
+    uptimeSeconds: Math.floor(os.uptime()),
+    relayStatus: {
+      connected: true,
+      pin: 'GPIO 18',
+      label: 'Candle Relay Connected'
+    }
   });
 });
 

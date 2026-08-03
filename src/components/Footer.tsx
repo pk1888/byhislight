@@ -5,9 +5,32 @@ interface FooterProps {
   settings: AppSettings;
 }
 
+interface PiStatus {
+  online: boolean;
+  device: string;
+  hostname: string;
+  cpuTempC: number | null;
+  uptimeSeconds: number;
+  relayStatus: {
+    connected: boolean;
+    pin: string;
+    label: string;
+  };
+}
+
+const formatUptime = (seconds: number): string => {
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+};
+
 export const Footer: React.FC<FooterProps> = ({ settings }) => {
   const [scotlandTime, setScotlandTime] = React.useState<string>('08:35');
   const [candleStatus, setCandleStatus] = React.useState<string>('Ready');
+  const [piStatus, setPiStatus] = React.useState<PiStatus | null>(null);
   const isDark = settings.theme === 'candlelight' || settings.theme === 'stone';
 
   React.useEffect(() => {
@@ -51,6 +74,22 @@ export const Footer: React.FC<FooterProps> = ({ settings }) => {
     return () => clearInterval(interval);
   }, []);
 
+  React.useEffect(() => {
+    const checkPi = async () => {
+      try {
+        const res = await fetch('/api/pi/status');
+        if (res.ok) {
+          setPiStatus(await res.json());
+        }
+      } catch {
+        // Keep last known status quietly if the node is unreachable
+      }
+    };
+    checkPi();
+    const interval = setInterval(checkPi, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <footer className={`w-full border-t transition-colors duration-300 py-10 px-6 ${
       isDark 
@@ -85,6 +124,26 @@ export const Footer: React.FC<FooterProps> = ({ settings }) => {
             <span>Serving since: 1 August 2026</span>
           </div>
         </div>
+
+        {/* Live chapel node status - quiet, minimal */}
+        {piStatus && (
+          <div className={`flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-[11px] font-sans tracking-wide ${
+            isDark ? 'text-stone-500' : 'text-stone-500'
+          }`}>
+            <span className="flex items-center space-x-1.5">
+              <span className="relative flex h-1.5 w-1.5 items-center justify-center">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
+              </span>
+              <span>{piStatus.device} • Online</span>
+            </span>
+            {piStatus.cpuTempC !== null && (
+              <span>{piStatus.cpuTempC.toFixed(1)}°C</span>
+            )}
+            <span>Up {formatUptime(piStatus.uptimeSeconds)}</span>
+            <span>{piStatus.relayStatus.label} ({piStatus.relayStatus.pin})</span>
+          </div>
+        )}
 
         {/* Quiet Brand & Foundation Footer */}
         <div className="pt-6 border-t border-stone-800/20 flex flex-col items-center text-center space-y-2">
