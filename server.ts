@@ -315,21 +315,31 @@ function getMemoryUsedPercent(): number | null {
   return Math.round(((total - os.freemem()) / total) * 100);
 }
 
-function getDiskUsedPercent(): number | null {
+function getDiskUsage(): { usedGB: number; totalGB: number } | null {
   try {
     const stats = fs.statfsSync(process.cwd());
     const total = stats.blocks * stats.bsize;
     if (!total) return null;
     const free = stats.bfree * stats.bsize;
-    return Math.round(((total - free) / total) * 100);
+    return {
+      usedGB: Math.round(((total - free) / (1024 ** 3)) * 10) / 10,
+      totalGB: Math.round((total / (1024 ** 3)) * 10) / 10,
+    };
   } catch {
     return null;
   }
 }
 
+function getDiskUsedPercent(): number | null {
+  const usage = getDiskUsage();
+  if (!usage || usage.totalGB === 0) return null;
+  return Math.round((usage.usedGB / usage.totalGB) * 100);
+}
+
 // GET live Raspberry Pi status (minimal, exposed data only)
 app.get('/api/pi/status', async (req, res) => {
   const cpuTempC = await getCpuTemperature();
+  const diskUsage = getDiskUsage();
 
   res.json({
     online: true,
@@ -340,6 +350,8 @@ app.get('/api/pi/status', async (req, res) => {
     cpuLoadPercent: getCpuLoadPercent(),
     memoryUsedPercent: getMemoryUsedPercent(),
     diskUsedPercent: getDiskUsedPercent(),
+    diskUsedGB: diskUsage ? diskUsage.usedGB : null,
+    diskTotalGB: diskUsage ? diskUsage.totalGB : null,
     relayStatus: {
       connected: true,
       pin: 'GPIO 18',

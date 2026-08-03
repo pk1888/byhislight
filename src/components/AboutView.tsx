@@ -36,6 +36,8 @@ interface PiStatus {
   cpuLoadPercent: number | null;
   memoryUsedPercent: number | null;
   diskUsedPercent: number | null;
+  diskUsedGB: number | null;
+  diskTotalGB: number | null;
   relayStatus: {
     connected: boolean;
     pin: string;
@@ -334,7 +336,11 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
                       ...(piStatus && piStatus.cpuTempC !== null ? [{ key: 'CPU Temp', value: `${piStatus.cpuTempC.toFixed(1)}°C` }] : []),
                       ...(piStatus && piStatus.cpuLoadPercent !== null ? [{ key: 'CPU Load', value: `${piStatus.cpuLoadPercent}%` }] : []),
                       ...(piStatus && piStatus.memoryUsedPercent !== null ? [{ key: 'Memory', value: `${piStatus.memoryUsedPercent}%` }] : []),
-                      ...(piStatus && piStatus.diskUsedPercent !== null ? [{ key: 'Disk', value: `${piStatus.diskUsedPercent}%` }] : []),
+                      ...(piStatus && piStatus.diskUsedGB !== null && piStatus.diskTotalGB !== null
+                        ? [{ key: 'Disk', value: `${piStatus.diskUsedGB} GB / ${piStatus.diskTotalGB} GB` }]
+                        : piStatus && piStatus.diskUsedPercent !== null
+                          ? [{ key: 'Disk', value: `${piStatus.diskUsedPercent}%` }]
+                          : []),
                     ],
                     ...(lastUpdated ? [[{ key: 'Last Updated', value: lastUpdated }]] : []),
                   ].map((group, gi) => (
