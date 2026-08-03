@@ -3,7 +3,7 @@ import { AppSettings } from '../types';
 import { ChapelCross } from './ChapelCross';
 import { FlameVisual } from './FlameVisual';
 import { Sparkles, Server } from 'lucide-react';
-import { formatUptime } from '../utils/format';
+import { formatUptimeWords } from '../utils/format';
 
 interface AboutViewProps {
   settings: AppSettings;
@@ -212,12 +212,16 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
               "{healthData.tagline}"
             </p>
 
+            <p className="flex items-center justify-center gap-1.5 text-sm font-sans text-stone-500 dark:text-stone-300">
+              🕯️ This altar has been quietly serving visitors for {formatUptimeWords(piStatus?.uptimeSeconds ?? healthData.uptimeSeconds)}.
+            </p>
+
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-sm pt-1">
               <div className="p-3.5 rounded-xl border border-stone-400/20 bg-black/5 dark:bg-white/5 space-y-1">
-                <div className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-300 font-medium">Altar Relay</div>
+                <div className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-300 font-medium">Home Altar</div>
                 <div className="flex items-center space-x-1.5 text-base font-bold text-[#D4AF37] tracking-tight">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-                  <span>Relay Connected</span>
+                  <span>Altar Ready</span>
                 </div>
               </div>
 
@@ -231,12 +235,12 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
               <div className="p-3.5 rounded-xl border border-stone-400/20 bg-black/5 dark:bg-white/5 space-y-1">
                 <div className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-300 font-medium">Raspberry Pi Uptime</div>
                 <div className="text-base font-bold text-stone-800 dark:text-stone-100">
-                  {piStatus ? formatUptime(piStatus.uptimeSeconds) : `${healthData.uptimeDays} days`}
+                  {formatUptimeWords(piStatus?.uptimeSeconds ?? healthData.uptimeSeconds)}
                 </div>
               </div>
 
               <div className="p-3.5 rounded-xl border border-stone-400/20 bg-black/5 dark:bg-white/5 space-y-1">
-                <div className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-300 font-medium">CPU Temperature</div>
+                <div className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-300 font-medium">Pi Temperature</div>
                 <div className="text-base font-bold text-[#D4AF37]">
                   {piStatus && piStatus.cpuTempC !== null ? `${piStatus.cpuTempC.toFixed(1)}°C` : '-'}
                 </div>

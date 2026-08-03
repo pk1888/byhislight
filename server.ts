@@ -227,7 +227,7 @@ app.get('/api/health', (req, res) => {
     uptimeDays: 143,
     uptimeSeconds: Math.floor(process.uptime()),
     memoryMB: Math.round(mem.rss / (1024 * 1024)),
-    tagline: "Hosted on a Raspberry Pi Zero 2 W sitting on my home altar in Inverclyde, Scotland. When a visitor offers a candle on this website, an electronic relay physically lights candles on my altar in real time.",
+    tagline: "By His Light is hosted on a Raspberry Pi Zero 2 W beside my home altar in Inverclyde, Scotland. When someone offers a candle through this website, a relay gently lights the altar candles in real time.",
     attribution: 'By His Light ⭐',
     timestamp: new Date().toISOString()
   });
