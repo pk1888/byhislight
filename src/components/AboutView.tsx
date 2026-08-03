@@ -43,6 +43,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
   const isDark = settings.theme === 'candlelight' || settings.theme === 'stone';
   const [healthData, setHealthData] = useState<HealthTelemetry | null>(null);
   const [piStatus, setPiStatus] = useState<PiStatus | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<string>('');
 
   // Dynamic age calculation based on DOB 01/03/1984 (March 1, 1984)
   const calculateAge = (birthDateString: string): number => {
@@ -58,18 +59,33 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
 
   const paulAge = calculateAge('1984-03-01');
 
+  const scotlandClock = () => new Date().toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+
   useEffect(() => {
-    fetch('/api/health')
-      .then(res => res.json())
-      .then(data => setHealthData(data))
-      .catch(err => console.debug('Health check fail:', err));
+    const load = () => {
+      fetch('/api/health')
+        .then(res => res.json())
+        .then(data => {
+          setHealthData(data);
+          setLastUpdated(scotlandClock());
+        })
+        .catch(err => console.debug('Health check fail:', err));
+    };
+    load();
+    const id = setInterval(load, 30000);
+    return () => clearInterval(id);
   }, []);
 
   useEffect(() => {
-    fetch('/api/pi/status')
-      .then(res => res.ok ? res.json() : null)
-      .then(data => setPiStatus(data))
-      .catch(err => console.debug('Pi status fail:', err));
+    const load = () => {
+      fetch('/api/pi/status')
+        .then(res => res.ok ? res.json() : null)
+        .then(data => setPiStatus(data))
+        .catch(err => console.debug('Pi status fail:', err));
+    };
+    load();
+    const id = setInterval(load, 30000);
+    return () => clearInterval(id);
   }, []);
 
   const scotlandTime = new Date().toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hour12: true });
@@ -241,7 +257,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
             </div>
 
             <p className="font-sans text-base sm:text-lg leading-relaxed text-stone-600 dark:text-stone-300">
-              For my fellow techy brothers and sisters, here are the live stats straight from the little Pi.
+              Curious how this chapel is built? Here's a live look at the Pi.
             </p>
 
             <div className="rounded-xl border border-[#2d2822] bg-[#0f0e0c] overflow-hidden shadow-inner">
@@ -255,11 +271,17 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
               </div>
               <div className="px-5 py-4 font-mono text-sm leading-relaxed overflow-x-auto">
                 <p className="text-[#8a8477]">
-                  <span className="text-[#D4AF37] font-semibold">$</span> neofetch
+                  <span className="text-[#3aa76d]">paul@byhislight</span>
+                  <span>:</span>
+                  <span className="text-[#D4AF37]">~</span>
+                  <span>$</span>
+                  <span className="text-[#D4AF37] font-semibold"> neofetch</span>
                 </p>
                 <div className="mt-3 space-y-1.5">
                   {[
-                    { key: 'Node', value: piStatus?.device ?? healthData.system },
+                    { key: 'Hardware', value: piStatus?.device ?? healthData.system },
+                    { key: 'Architecture', value: 'ARM64' },
+                    { key: 'Kernel', value: 'Linux 6.12' },
                     { key: 'Location', value: healthData.location },
                     { key: 'Frontend', value: 'React 19 + TypeScript' },
                     { key: 'Backend', value: 'Node.js + Express' },
@@ -272,7 +294,8 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
                     ...(piStatus && piStatus.cpuLoadPercent !== null ? [{ key: 'CPU Load', value: `${piStatus.cpuLoadPercent}%` }] : []),
                     ...(piStatus && piStatus.memoryUsedPercent !== null ? [{ key: 'Memory', value: `${piStatus.memoryUsedPercent}%` }] : []),
                     ...(piStatus && piStatus.diskUsedPercent !== null ? [{ key: 'Disk', value: `${piStatus.diskUsedPercent}%` }] : []),
-                    ...(piStatus && piStatus.relayStatus ? [{ key: 'GPIO', value: `${piStatus.relayStatus.pin} (Candle Relay)` }] : []),
+                    ...(piStatus && piStatus.relayStatus ? [{ key: 'Relay', value: piStatus.relayStatus.pin.replace(/\s/g, '') }] : []),
+                    { key: 'Last Updated', value: lastUpdated },
                   ].map(row => (
                     <p key={row.key} className="whitespace-pre">
                       <span className="text-[#8a8477]">{row.key.padEnd(15, '.')}</span>
