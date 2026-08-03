@@ -142,7 +142,7 @@
     <h1>The Sanctuary is Full</h1>
 
     <div class="scripture">
-      "Be still, and know that I am God." — Psalm 46:10
+      "Be still, and know that I am God." - Psalm 46:10
     </div>
 
     <p class="message">
@@ -196,9 +196,6 @@
         }
         if (data.cpuTempC !== null && data.cpuTempC !== undefined) {
           parts.push(`<span>CPU ${data.cpuTempC.toFixed(1)}°C</span>`);
-        }
-        if (data.hostname) {
-          parts.push(`<span>Hostname: ${data.hostname}</span>`);
         }
         if (data.uptimeSeconds) {
           parts.push(`<span>Up ${formatUptime(data.uptimeSeconds)}</span>`);

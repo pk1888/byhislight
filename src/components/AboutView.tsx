@@ -69,6 +69,8 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
       .catch(err => console.debug('Pi status fail:', err));
   }, []);
 
+  const scotlandTime = new Date().toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hour12: true });
+
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 space-y-10">
       {/* Header */}
@@ -200,8 +202,8 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
                 <Server className="w-4.5 h-4.5 text-[#D4AF37]" />
                 <span>Home Altar Node • Scotland</span>
               </div>
-              <div className="flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs border border-[#c5a059]/30 bg-[#c5a059]/10 text-[#c5a059] font-semibold">
-                <span className="inline-block animate-pulse text-[#c5a059]">●</span>
+              <div className="flex items-center space-x-1.5 text-xs text-[#c5a059] font-medium">
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400" />
                 <span>Connected to my prayer altar in Scotland</span>
               </div>
             </div>
@@ -212,9 +214,10 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
 
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-sm pt-1">
               <div className="p-3.5 rounded-xl border border-stone-400/20 bg-black/5 dark:bg-white/5 space-y-1">
-                <div className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-300 font-medium">My Prayer Altar</div>
-                <div className="text-base font-bold text-[#D4AF37] tracking-tight">
-                  Channel Active
+                <div className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-300 font-medium">Altar Relay</div>
+                <div className="flex items-center space-x-1.5 text-base font-bold text-[#D4AF37] tracking-tight">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                  <span>Relay Connected</span>
                 </div>
               </div>
 
@@ -226,49 +229,24 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
               </div>
 
               <div className="p-3.5 rounded-xl border border-stone-400/20 bg-black/5 dark:bg-white/5 space-y-1">
-                <div className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-300 font-medium">Website Uptime</div>
+                <div className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-300 font-medium">Raspberry Pi Uptime</div>
                 <div className="text-base font-bold text-stone-800 dark:text-stone-100">
-                  {healthData.uptimeDays} days
+                  {piStatus ? formatUptime(piStatus.uptimeSeconds) : `${healthData.uptimeDays} days`}
                 </div>
               </div>
 
               <div className="p-3.5 rounded-xl border border-stone-400/20 bg-black/5 dark:bg-white/5 space-y-1">
-                <div className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-300 font-medium">Local Time (Scotland)</div>
+                <div className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-300 font-medium">CPU Temperature</div>
                 <div className="text-base font-bold text-[#D4AF37]">
-                  {new Date().toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', hour12: true })}
+                  {piStatus && piStatus.cpuTempC !== null ? `${piStatus.cpuTempC.toFixed(1)}°C` : '-'}
                 </div>
               </div>
             </div>
 
-            {/* Live Raspberry Pi node vitals - quiet, minimal */}
-            {piStatus && (
-              <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-[11px] font-sans tracking-wide text-stone-500 dark:text-stone-400">
-                <span className="flex items-center space-x-1.5">
-                  <span className="relative flex h-1.5 w-1.5 items-center justify-center">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
-                  </span>
-                  <span>Chapel Node Online</span>
-                </span>
-                {piStatus.cpuTempC !== null && (
-                  <span>CPU {piStatus.cpuTempC.toFixed(1)}°C</span>
-                )}
-                <span>Hostname: {piStatus.hostname}</span>
-                <span>Up {formatUptime(piStatus.uptimeSeconds)}</span>
-              </div>
-            )}
-
             <div className="flex flex-wrap justify-between items-center text-xs text-stone-500 dark:text-stone-400 border-t pt-3 border-stone-400/20 font-sans gap-2">
               <span>Node: {healthData.system}</span>
               <div className="flex items-center space-x-3">
-                <a
-                  href="/full-sanctuary.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[#D4AF37] hover:underline"
-                >
-                  Overload Fallback (503 Page)
-                </a>
+                <span>Local Time: {scotlandTime}</span>
                 <span className="text-[#D4AF37] font-semibold">{healthData.attribution}</span>
               </div>
             </div>

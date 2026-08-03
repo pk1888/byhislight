@@ -19,9 +19,10 @@ import { SilenceModeView } from './components/SilenceModeView';
 import { AboutView } from './components/AboutView';
 import { FullSanctuaryView } from './components/FullSanctuaryView';
 import { TenCommandmentsView } from './components/TenCommandmentsView';
+import { pathToView, viewPath, viewTitle } from './utils/routes';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<ViewMode>('home');
+  const [currentView, setCurrentView] = useState<ViewMode>(() => pathToView(window.location.pathname));
   const [settings, setSettings] = useState<AppSettings>({
     theme: 'candlelight',
     fontSize: 'normal',
@@ -29,9 +30,30 @@ export default function App() {
     quietBell: false
   });
 
+  const navigate = (view: ViewMode) => {
+    setCurrentView(view);
+    const path = viewPath(view);
+    if (window.location.pathname !== path) {
+      window.history.pushState({}, '', path);
+    }
+    window.scrollTo(0, 0);
+  };
+
+  // Keep the URL in sync with browser back/forward buttons
+  useEffect(() => {
+    const onPopState = () => setCurrentView(pathToView(window.location.pathname));
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
   // Scroll to top of window whenever the user switches views
   useEffect(() => {
     window.scrollTo(0, 0);
+  }, [currentView]);
+
+  // Update the document title to match the current page
+  useEffect(() => {
+    document.title = viewTitle(currentView);
   }, [currentView]);
 
   // Apply theme class to root body
@@ -60,7 +82,7 @@ export default function App() {
   const renderContent = () => {
     switch (currentView) {
       case 'home':
-        return <BlessingCard settings={settings} onNavigate={setCurrentView} />;
+        return <BlessingCard settings={settings} onNavigate={navigate} />;
       case 'gospel':
         return <GospelView settings={settings} />;
       case 'prayers':
@@ -80,9 +102,9 @@ export default function App() {
       case 'about':
         return <AboutView settings={settings} />;
       case 'full-sanctuary':
-        return <FullSanctuaryView settings={settings} onRetry={() => setCurrentView('home')} />;
+        return <FullSanctuaryView settings={settings} onRetry={() => navigate('home')} />;
       default:
-        return <BlessingCard settings={settings} onNavigate={setCurrentView} />;
+        return <BlessingCard settings={settings} onNavigate={navigate} />;
     }
   };
 
@@ -96,7 +118,7 @@ export default function App() {
       {currentView !== 'silence' && (
         <Navbar
           currentView={currentView}
-          onSelectView={setCurrentView}
+          onSelectView={navigate}
           settings={settings}
           onUpdateSettings={setSettings}
         />
@@ -105,7 +127,7 @@ export default function App() {
       {/* Main View Container */}
       <main className="flex-1 w-full pb-16">
         {currentView === 'silence' ? (
-          <SilenceModeView settings={settings} onExit={() => setCurrentView('home')} />
+          <SilenceModeView settings={settings} onExit={() => navigate('home')} />
         ) : (
           renderContent()
         )}
