@@ -12,11 +12,7 @@
     },
     {
       "id": 2,
-      "isLit": true,
-      "candleTypeId": "immaculate_heart_mary",
-      "intention": "For the healing of my sick father",
-      "litAt": 1785761797018,
-      "expiresAt": 1785762697018
+      "isLit": false
     },
     {
       "id": 3,
