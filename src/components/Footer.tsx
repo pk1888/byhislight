@@ -132,18 +132,18 @@ export const Footer: React.FC<FooterProps> = ({ settings }) => {
               </span>
               <span>Online</span>
             </span>
-            <span>Uptime: {formatUptime(piStatus.uptimeSeconds)}</span>
+            <span>Uptime: <strong className="font-bold text-[#c5a059]">{formatUptime(piStatus.uptimeSeconds)}</strong></span>
             {piStatus.cpuTempC !== null && (
-              <span>CPU Temp: {piStatus.cpuTempC.toFixed(1)}°C</span>
+              <span><strong className="font-bold">CPU Temp:</strong> <span className="text-[#c5a059]">{piStatus.cpuTempC.toFixed(1)}°C</span></span>
             )}
             {piStatus.cpuLoadPercent !== null && (
-              <span>CPU Load: {piStatus.cpuLoadPercent}%</span>
+              <span><strong className="font-bold">CPU Load:</strong> <span className="text-[#c5a059]">{piStatus.cpuLoadPercent}%</span></span>
             )}
             {piStatus.memoryUsedPercent !== null && (
-              <span>Memory: {piStatus.memoryUsedPercent}%</span>
+              <span><strong className="font-bold">Memory:</strong> <span className="text-[#c5a059]">{piStatus.memoryUsedPercent}%</span></span>
             )}
             {piStatus.diskUsedPercent !== null && (
-              <span>Disk Used: {piStatus.diskUsedPercent}%</span>
+              <span><strong className="font-bold">Disk Used:</strong> <span className="text-[#c5a059]">{piStatus.diskUsedPercent}%</span></span>
             )}
           </div>
         )}

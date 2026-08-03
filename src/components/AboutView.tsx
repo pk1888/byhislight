@@ -241,31 +241,31 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
                 <span>Inverclyde, Scotland</span>
               </div>
               <div>
-                Serving since 1 August 2026
+                <strong className="font-bold">Serving since</strong> <span className="text-[#D4AF37]">1 August 2026</span>
               </div>
               <div>
-                Uptime: {formatUptimeWords(piStatus?.uptimeSeconds ?? healthData.uptimeSeconds)}
+                <strong className="font-bold">Uptime:</strong> <span className="text-[#D4AF37]">{formatUptimeWords(piStatus?.uptimeSeconds ?? healthData.uptimeSeconds)}</span>
               </div>
               <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
                 {piStatus && piStatus.cpuTempC !== null && (
-                  <span>CPU {piStatus.cpuTempC.toFixed(1)}°C</span>
+                  <span><strong className="font-bold">CPU</strong> <span className="text-[#D4AF37]">{piStatus.cpuTempC.toFixed(1)}°C</span></span>
                 )}
                 {piStatus && piStatus.cpuLoadPercent !== null && (
                   <span className="flex items-center gap-x-2">
                     <span className="opacity-50">·</span>
-                    <span>Load {piStatus.cpuLoadPercent}%</span>
+                    <span><strong className="font-bold">Load</strong> <span className="text-[#D4AF37]">{piStatus.cpuLoadPercent}%</span></span>
                   </span>
                 )}
                 {piStatus && piStatus.memoryUsedPercent !== null && (
                   <span className="flex items-center gap-x-2">
                     <span className="opacity-50">·</span>
-                    <span>Memory {piStatus.memoryUsedPercent}%</span>
+                    <span><strong className="font-bold">Memory</strong> <span className="text-[#D4AF37]">{piStatus.memoryUsedPercent}%</span></span>
                   </span>
                 )}
                 {piStatus && piStatus.diskUsedPercent !== null && (
                   <span className="flex items-center gap-x-2">
                     <span className="opacity-50">·</span>
-                    <span>Disk {piStatus.diskUsedPercent}%</span>
+                    <span><strong className="font-bold">Disk</strong> <span className="text-[#D4AF37]">{piStatus.diskUsedPercent}%</span></span>
                   </span>
                 )}
               </div>
