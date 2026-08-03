@@ -174,11 +174,25 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
             </div>
 
             <p>
-              <strong>By His Light</strong> is a quiet digital chapel, lovingly hosted on a tiny <strong>Raspberry Pi Zero 2 W</strong> sitting directly on my personal <strong>home altar in Inverclyde, Scotland</strong>.
+              <strong>By His Light</strong> is a quiet digital chapel, lovingly hosted on a tiny <strong>Raspberry Pi Zero 2 W</strong> sitting directly on my personal <strong>home altar in Inverclyde, Scotland</strong>. The entire site - website, candle database, and all - runs from a single <strong>64GB microSD card</strong>, with no cloud servers and no data centres.
             </p>
             <p>
               Whenever a visitor anywhere in the world offers a candle on this website, an electronic relay connected to the Raspberry Pi GPIO pin <strong>lights physical votive candles right on my altar at home</strong>. It is a real-time link of prayer between your heart, this web sanctuary, and our home - offering up a heartfelt blessing for my family and me with every flame.
             </p>
+
+            <div className={`float-right ml-6 mb-3 p-3 rounded-2xl border shadow-inner max-w-[170px] ${
+              isDark ? 'bg-[#12110e] border-[#2d2822]' : 'bg-[#f4ebd9] border-[#e4d3b8]'
+            }`}>
+              <img
+                src="/images/microsd-64gb.jpg"
+                alt="64GB microSD card"
+                className="w-full h-auto object-contain rounded-lg drop-shadow-md hover:scale-105 transition-transform duration-300"
+              />
+              <p className="text-xs text-center mt-2 text-stone-500 dark:text-stone-400 font-sans">
+                The whole chapel lives on this 64GB microSD card
+              </p>
+            </div>
+
             <p>
               Here you will find no advertisements, no tracking, no algorithms, and no distractions - only Scripture, prayer, and a quiet place to spend time with Christ.
             </p>
@@ -192,7 +206,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
           </div>
         </div>
 
-        {/* Solar & Micro-Node Telemetry Card */}
+        {/* Home Altar telemetry */}
         {healthData && (
           <div className={`p-6 sm:p-8 rounded-2xl border font-sans space-y-5 transition-all shadow-sm ${
             isDark ? 'bg-[#1b1916] border-[#332e27] text-[#ece4d6]' : 'bg-[#faf6ee] border-[#ebdcc8] text-[#1A2A40]'
