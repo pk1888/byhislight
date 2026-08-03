@@ -301,6 +301,32 @@ function getCpuTemperature(): Promise<string | null> {
   });
 }
 
+function getCpuLoadPercent(): number | null {
+  const cores = os.cpus();
+  if (!cores || cores.length === 0) return null;
+  const oneMinute = os.loadavg()[0];
+  if (oneMinute == null) return null;
+  return Math.min(100, Math.round((oneMinute / cores.length) * 100));
+}
+
+function getMemoryUsedPercent(): number | null {
+  const total = os.totalmem();
+  if (!total) return null;
+  return Math.round(((total - os.freemem()) / total) * 100);
+}
+
+function getDiskUsedPercent(): number | null {
+  try {
+    const stats = fs.statfsSync(process.cwd());
+    const total = stats.blocks * stats.bsize;
+    if (!total) return null;
+    const free = stats.bfree * stats.bsize;
+    return Math.round(((total - free) / total) * 100);
+  } catch {
+    return null;
+  }
+}
+
 // GET live Raspberry Pi status (minimal, exposed data only)
 app.get('/api/pi/status', async (req, res) => {
   const cpuTempC = await getCpuTemperature();
@@ -311,6 +337,9 @@ app.get('/api/pi/status', async (req, res) => {
     hostname: os.hostname(),
     cpuTempC: cpuTempC !== null ? parseFloat(cpuTempC) : null,
     uptimeSeconds: Math.floor(os.uptime()),
+    cpuLoadPercent: getCpuLoadPercent(),
+    memoryUsedPercent: getMemoryUsedPercent(),
+    diskUsedPercent: getDiskUsedPercent(),
     relayStatus: {
       connected: true,
       pin: 'GPIO 18',

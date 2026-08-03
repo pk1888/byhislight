@@ -29,6 +29,9 @@ interface PiStatus {
   hostname: string;
   cpuTempC: number | null;
   uptimeSeconds: number;
+  cpuLoadPercent: number | null;
+  memoryUsedPercent: number | null;
+  diskUsedPercent: number | null;
   relayStatus: {
     connected: boolean;
     pin: string;
@@ -230,34 +233,41 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
               🕯️ This altar has been quietly serving visitors for {formatUptimeWords(piStatus?.uptimeSeconds ?? healthData.uptimeSeconds)}.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-sm pt-1">
-              <div className="p-3.5 rounded-xl border border-stone-400/20 bg-black/5 dark:bg-white/5 space-y-1">
-                <div className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-300 font-medium">Home Altar</div>
-                <div className="flex items-center space-x-1.5 text-base font-bold text-[#D4AF37] tracking-tight">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-                  <span>Altar Ready</span>
-                </div>
+            <div className="flex flex-col items-center justify-center gap-1.5 pt-1 text-sm sm:text-base font-sans text-stone-600 dark:text-stone-300">
+              <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                <span>Altar Ready</span>
+                <span className="opacity-50">·</span>
+                <span>Inverclyde, Scotland</span>
               </div>
-
-              <div className="p-3.5 rounded-xl border border-stone-400/20 bg-black/5 dark:bg-white/5 space-y-1">
-                <div className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-300 font-medium">Location</div>
-                <div className="text-base font-bold text-[#3D5A45] dark:text-[#88b392]">
-                  Inverclyde, Scotland
-                </div>
+              <div>
+                Serving since 1 August 2026
               </div>
-
-              <div className="p-3.5 rounded-xl border border-stone-400/20 bg-black/5 dark:bg-white/5 space-y-1">
-                <div className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-300 font-medium">Raspberry Pi Uptime</div>
-                <div className="text-base font-bold text-stone-800 dark:text-stone-100">
-                  {formatUptimeWords(piStatus?.uptimeSeconds ?? healthData.uptimeSeconds)}
-                </div>
+              <div>
+                Uptime: {formatUptimeWords(piStatus?.uptimeSeconds ?? healthData.uptimeSeconds)}
               </div>
-
-              <div className="p-3.5 rounded-xl border border-stone-400/20 bg-black/5 dark:bg-white/5 space-y-1">
-                <div className="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-300 font-medium">Pi Temperature</div>
-                <div className="text-base font-bold text-[#D4AF37]">
-                  {piStatus && piStatus.cpuTempC !== null ? `${piStatus.cpuTempC.toFixed(1)}°C` : '-'}
-                </div>
+              <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+                {piStatus && piStatus.cpuTempC !== null && (
+                  <span>CPU {piStatus.cpuTempC.toFixed(1)}°C</span>
+                )}
+                {piStatus && piStatus.cpuLoadPercent !== null && (
+                  <span className="flex items-center gap-x-2">
+                    <span className="opacity-50">·</span>
+                    <span>Load {piStatus.cpuLoadPercent}%</span>
+                  </span>
+                )}
+                {piStatus && piStatus.memoryUsedPercent !== null && (
+                  <span className="flex items-center gap-x-2">
+                    <span className="opacity-50">·</span>
+                    <span>Memory {piStatus.memoryUsedPercent}%</span>
+                  </span>
+                )}
+                {piStatus && piStatus.diskUsedPercent !== null && (
+                  <span className="flex items-center gap-x-2">
+                    <span className="opacity-50">·</span>
+                    <span>Disk {piStatus.diskUsedPercent}%</span>
+                  </span>
+                )}
               </div>
             </div>
 

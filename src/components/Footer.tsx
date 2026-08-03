@@ -12,6 +12,9 @@ interface PiStatus {
   hostname: string;
   cpuTempC: number | null;
   uptimeSeconds: number;
+  cpuLoadPercent: number | null;
+  memoryUsedPercent: number | null;
+  diskUsedPercent: number | null;
   relayStatus: {
     connected: boolean;
     pin: string;
@@ -127,13 +130,21 @@ export const Footer: React.FC<FooterProps> = ({ settings }) => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
               </span>
-              <span>{piStatus.device} • Online</span>
+              <span>Online</span>
             </span>
+            <span>Uptime: {formatUptime(piStatus.uptimeSeconds)}</span>
             {piStatus.cpuTempC !== null && (
-              <span>{piStatus.cpuTempC.toFixed(1)}°C</span>
+              <span>CPU Temp: {piStatus.cpuTempC.toFixed(1)}°C</span>
             )}
-            <span>Up {formatUptime(piStatus.uptimeSeconds)}</span>
-            <span>{piStatus.relayStatus.label} ({piStatus.relayStatus.pin})</span>
+            {piStatus.cpuLoadPercent !== null && (
+              <span>CPU Load: {piStatus.cpuLoadPercent}%</span>
+            )}
+            {piStatus.memoryUsedPercent !== null && (
+              <span>Memory: {piStatus.memoryUsedPercent}%</span>
+            )}
+            {piStatus.diskUsedPercent !== null && (
+              <span>Disk Used: {piStatus.diskUsedPercent}%</span>
+            )}
           </div>
         )}
 
@@ -148,7 +159,7 @@ export const Footer: React.FC<FooterProps> = ({ settings }) => {
             By His Light
           </span>
           <div className="text-xs opacity-75 font-sans space-y-0.5">
-            <div>© {new Date().getFullYear()} By His Light. All rights reserved.</div>
+            <div>© {new Date().getFullYear()} All rights reserved.</div>
           </div>
         </div>
       </div>
