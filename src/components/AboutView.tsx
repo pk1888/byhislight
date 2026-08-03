@@ -266,7 +266,6 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
                     { key: 'Build', value: 'Vite + esbuild' },
                     { key: 'Storage', value: 'JSON (no SQL)' },
                     { key: 'Deployment', value: 'GitHub → systemd' },
-                    { key: 'Hosting', value: 'Self-hosted from my home' },
                     { key: 'Serving Since', value: '1 August 2026' },
                     { key: 'Uptime', value: formatUptimeWords(piStatus?.uptimeSeconds ?? healthData.uptimeSeconds) },
                     ...(piStatus && piStatus.cpuTempC !== null ? [{ key: 'CPU Temp', value: `${piStatus.cpuTempC.toFixed(1)}°C` }] : []),
