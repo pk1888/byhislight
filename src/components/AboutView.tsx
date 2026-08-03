@@ -4,6 +4,10 @@ import { ChapelCross } from './ChapelCross';
 import { FlameVisual } from './FlameVisual';
 import { Sparkles, Server } from 'lucide-react';
 import { formatUptimeWords } from '../utils/format';
+import holyFamilyPhoto1 from '../assets/images/holy-family-church/photo-1.jpg';
+import holyFamilyPhoto2 from '../assets/images/holy-family-church/photo-2.jpg';
+import holyFamilyPhoto3 from '../assets/images/holy-family-church/photo-3.jpg';
+import holyFamilyPhoto4 from '../assets/images/holy-family-church/photo-4.jpg';
 
 interface AboutViewProps {
   settings: AppSettings;
@@ -156,6 +160,37 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
             <p>
               One day I came across a discussion online by <strong>Charlie Kirk</strong> about faith, and something stirred deep within me. It was not the speaker himself who brought me home, but in that quiet moment God opened my heart again. I will always be grateful that the Lord used that moment as part of my journey back to Him.
             </p>
+
+            <div className="pt-2">
+              <p className="font-semibold text-[#d4af37] mb-3">
+                The church I grew up going to - Holy Family
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[
+                  holyFamilyPhoto1,
+                  holyFamilyPhoto2,
+                  holyFamilyPhoto3,
+                  holyFamilyPhoto4,
+                ].map((src, i) => (
+                  <figure
+                    key={src}
+                    className={`overflow-hidden rounded-xl border shadow-sm ${
+                      isDark ? 'border-[#2d2822]' : 'border-[#e4d3b8]'
+                    }`}
+                  >
+                    <img
+                      src={src}
+                      alt={`Holy Family Church photo ${i + 1}`}
+                      loading="lazy"
+                      className="w-full h-56 sm:h-64 object-cover hover:scale-105 transition-transform duration-300"
+                    />
+                    <figcaption className="px-3 py-2 text-xs text-center font-sans text-stone-500 dark:text-stone-400">
+                      Holy Family Church
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -266,7 +301,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
                 <span className="w-3 h-3 rounded-full bg-[#f7c948]/80" />
                 <span className="w-3 h-3 rounded-full bg-[#3aa76d]/80" />
                 <span className="ml-2 font-mono text-xs text-[#8a8477]">
-                  paul@byhislight — ssh pi@byhislight.faith
+                  paul@byhislight - ssh pi@byhislight.faith
                 </span>
               </div>
               <div className="px-5 py-4 font-mono text-sm leading-relaxed overflow-x-auto">

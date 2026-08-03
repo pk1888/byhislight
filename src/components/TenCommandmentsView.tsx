@@ -23,9 +23,9 @@ export const TenCommandmentsView: React.FC<TenCommandmentsViewProps> = ({ settin
         <p className={`text-sm font-sans font-medium flex items-center justify-center space-x-2 ${
           isDark ? 'text-[#C2B7A5]' : 'text-stone-600'
         }`}>
-          <span>Exodus 20:2–17</span>
+          <span>Exodus 20:2-17</span>
           <span>•</span>
-          <span>Deuteronomy 5:6–21</span>
+          <span>Deuteronomy 5:6-21</span>
         </p>
       </div>
 
