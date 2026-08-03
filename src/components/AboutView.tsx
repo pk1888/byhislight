@@ -4,10 +4,10 @@ import { ChapelCross } from './ChapelCross';
 import { FlameVisual } from './FlameVisual';
 import { Sparkles, Server } from 'lucide-react';
 import { formatUptimeWords } from '../utils/format';
-import holyFamilyPhoto1 from '../assets/images/holy-family-church/photo-1.jpg';
-import holyFamilyPhoto2 from '../assets/images/holy-family-church/photo-2.jpg';
-import holyFamilyPhoto3 from '../assets/images/holy-family-church/photo-3.jpg';
-import holyFamilyPhoto4 from '../assets/images/holy-family-church/photo-4.jpg';
+import holyFamilyPhoto1 from '../assets/images/holy-family-church/photo-1.avif';
+import holyFamilyPhoto2 from '../assets/images/holy-family-church/photo-2.avif';
+import holyFamilyPhoto3 from '../assets/images/holy-family-church/photo-3.avif';
+import holyFamilyPhoto4 from '../assets/images/holy-family-church/photo-4.avif';
 
 interface AboutViewProps {
   settings: AppSettings;
@@ -48,6 +48,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
   const [healthData, setHealthData] = useState<HealthTelemetry | null>(null);
   const [piStatus, setPiStatus] = useState<PiStatus | null>(null);
   const [lastUpdated, setLastUpdated] = useState<string>('');
+  const [lightbox, setLightbox] = useState<string | null>(null);
 
   // Dynamic age calculation based on DOB 01/03/1984 (March 1, 1984)
   const calculateAge = (birthDateString: string): number => {
@@ -152,6 +153,9 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
               When I was growing up, my gran took me to Mass every Sunday. Those mornings remain some of my most treasured memories, and it was through her quiet faith that my journey with God first began.
             </p>
             <p>
+              My church was located right next to my primary school, <strong>Holy Family Primary</strong>, and the two were divided only by a little gate. We'd occasionally walk through the gate and go to church, and I have so many fond memories of those days.
+            </p>
+            <p>
               Like many people, I lost my way as I grew older. Faith slowly drifted into the background of my life, and for many years I lived without the relationship with God that I once had.
             </p>
             <p className="font-semibold italic text-[#d4af37]">
@@ -178,12 +182,19 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
                       isDark ? 'border-[#2d2822]' : 'border-[#e4d3b8]'
                     }`}
                   >
-                    <img
-                      src={src}
-                      alt={`Holy Family Church photo ${i + 1}`}
-                      loading="lazy"
-                      className="w-full h-56 sm:h-64 object-cover hover:scale-105 transition-transform duration-300"
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setLightbox(src)}
+                      title="Open full size"
+                      className="block w-full cursor-zoom-in focus:outline-none"
+                    >
+                      <img
+                        src={src}
+                        alt={`Holy Family Church photo ${i + 1}`}
+                        loading="lazy"
+                        className="w-full h-44 sm:h-56 object-cover hover:scale-105 transition-transform duration-300"
+                      />
+                    </button>
                     <figcaption className="px-3 py-2 text-xs text-center font-sans text-stone-500 dark:text-stone-400">
                       Holy Family Church
                     </figcaption>
@@ -355,6 +366,19 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
           </div>
         )}
       </div>
+
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 cursor-zoom-out animate-fade-in"
+          onClick={() => setLightbox(null)}
+        >
+          <img
+            src={lightbox}
+            alt="Holy Family Church full view"
+            className="max-h-[90vh] max-w-full object-contain rounded-lg shadow-2xl"
+          />
+        </div>
+      )}
     </div>
   );
 };
