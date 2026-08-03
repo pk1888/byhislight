@@ -256,10 +256,13 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
             </div>
 
             <p>
-              <strong>By His Light</strong> is a quiet digital chapel, lovingly hosted on a tiny <strong>Raspberry Pi Zero 2 W</strong> sitting directly on my personal <strong>home altar in Inverclyde, Scotland</strong>.
+              <strong>By His Light</strong> is a quiet digital chapel, lovingly hosted on a tiny <strong>Raspberry Pi Zero 2 W</strong> sitting beside my personal <strong>home altar in Inverclyde, Scotland</strong>.
             </p>
             <p>
-              Whenever a visitor anywhere in the world offers a candle on this website, an electronic relay connected to the Raspberry Pi GPIO pin <strong>lights physical votive candles right on my altar at home</strong>. It is a real-time link of prayer between your heart, this web sanctuary, and our home - offering up a heartfelt blessing for my family and me with every flame.
+              Whenever a visitor anywhere in the world offers a candle through this website, an electronic relay connected to the Raspberry Pi <strong>lights physical votive candles on my altar in real time</strong>. It creates a tangible connection between your prayer, this little chapel, and my home, with every flame serving as a heartfelt prayer for my family and me.
+            </p>
+            <p>
+              While thinking about this project, I looked over at the candles on my home altar. It reminded me that light has always been a powerful symbol in the Christian faith - of Christ, hope, and prayer. Since this little chapel allows people to offer a prayer and light a real candle, <strong>By His Light</strong> felt like the natural name.
             </p>
 
             <p>
