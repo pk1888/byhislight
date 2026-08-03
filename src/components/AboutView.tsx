@@ -153,7 +153,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
               When I was growing up, my gran took me to Mass every Sunday. Those mornings remain some of my most treasured memories, and it was through her quiet faith that my journey with God first began.
             </p>
             <p>
-              My church was located right next to my primary school, <strong>Holy Family Primary</strong>, and the two were divided only by a little gate. We'd occasionally walk through the gate and go to church, and I have so many fond memories of those days.
+              My church was located right next to my primary school, <strong>Holy Family Primary</strong>, and the two were divided only by a little gate. We'd occasionally walk through the gate and go to church, and I have so many fond memories of those days. The church has since closed, but those memories remain dear to me.
             </p>
             <p>
               Like many people, I lost my way as I grew older. Faith slowly drifted into the background of my life, and for many years I lived without the relationship with God that I once had.
@@ -162,12 +162,12 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
               By God's grace, that changed.
             </p>
             <p>
-              One day I came across a discussion online by <strong>Charlie Kirk</strong> about faith, and something stirred deep within me. It was not the speaker himself who brought me home, but in that quiet moment God opened my heart again. I will always be grateful that the Lord used that moment as part of my journey back to Him.
+              One day, I came across an online discussion by <strong>Charlie Kirk</strong> about faith, and his words made me see things clearly again. Something stirred deep within me, and in that quiet moment, my heart opened back up to God.
             </p>
 
             <div className="pt-2">
               <p className="font-semibold text-[#d4af37] mb-3">
-                The church I grew up going to - Holy Family
+                The church I grew up going to - Holy Family (now closed)
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
