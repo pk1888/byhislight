@@ -254,24 +254,11 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
             </div>
 
             <p>
-              <strong>By His Light</strong> is a quiet digital chapel, lovingly hosted on a tiny <strong>Raspberry Pi Zero 2 W</strong> sitting directly on my personal <strong>home altar in Inverclyde, Scotland</strong>. The entire site - website, candle database, and all - runs from a single <strong>64GB microSD card</strong>, with no cloud servers and no data centres.
+              <strong>By His Light</strong> is a quiet digital chapel, lovingly hosted on a tiny <strong>Raspberry Pi Zero 2 W</strong> sitting directly on my personal <strong>home altar in Inverclyde, Scotland</strong>.
             </p>
             <p>
               Whenever a visitor anywhere in the world offers a candle on this website, an electronic relay connected to the Raspberry Pi GPIO pin <strong>lights physical votive candles right on my altar at home</strong>. It is a real-time link of prayer between your heart, this web sanctuary, and our home - offering up a heartfelt blessing for my family and me with every flame.
             </p>
-
-            <div className={`float-right ml-6 mb-3 p-3 rounded-2xl border shadow-inner max-w-[170px] ${
-              isDark ? 'bg-[#12110e] border-[#2d2822]' : 'bg-[#f4ebd9] border-[#e4d3b8]'
-            }`}>
-              <img
-                src="/images/microsd-64gb.jpg"
-                alt="64GB microSD card"
-                className="w-full h-auto object-contain rounded-lg drop-shadow-md hover:scale-105 transition-transform duration-300"
-              />
-              <p className="text-xs text-center mt-2 text-stone-500 dark:text-stone-400 font-sans">
-                The whole chapel lives on this 64GB microSD card
-              </p>
-            </div>
 
             <p>
               Here you will find no advertisements, no tracking, no algorithms, and no distractions - only Scripture, prayer, and a quiet place to spend time with Christ.
@@ -303,7 +290,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
             </div>
 
             <p className="font-sans text-base sm:text-lg leading-relaxed text-stone-600 dark:text-stone-300">
-              Curious how this chapel is built? Here's a live look at the Pi.
+              For my fellow techy brothers and sisters - here's a live look at the little Pi quietly serving this chapel. At the moment you have:
             </p>
 
             <div className="rounded-xl border border-[#2d2822] bg-[#0f0e0c] overflow-hidden shadow-inner">
@@ -325,28 +312,40 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
                 </p>
                 <div className="mt-3 space-y-1.5">
                   {[
-                    { key: 'Hardware', value: piStatus?.device ?? healthData.system },
-                    { key: 'Architecture', value: 'ARM64' },
-                    { key: 'Kernel', value: 'Linux 6.12' },
-                    { key: 'Location', value: healthData.location },
-                    { key: 'Frontend', value: 'React 19 + TypeScript' },
-                    { key: 'Backend', value: 'Node.js + Express' },
-                    { key: 'Build', value: 'Vite + esbuild' },
-                    { key: 'Storage', value: 'JSON (no SQL)' },
-                    { key: 'Deployment', value: 'GitHub → systemd' },
-                    { key: 'Serving Since', value: '1 August 2026' },
-                    { key: 'Uptime', value: formatUptimeWords(piStatus?.uptimeSeconds ?? healthData.uptimeSeconds) },
-                    ...(piStatus && piStatus.cpuTempC !== null ? [{ key: 'CPU Temp', value: `${piStatus.cpuTempC.toFixed(1)}°C` }] : []),
-                    ...(piStatus && piStatus.cpuLoadPercent !== null ? [{ key: 'CPU Load', value: `${piStatus.cpuLoadPercent}%` }] : []),
-                    ...(piStatus && piStatus.memoryUsedPercent !== null ? [{ key: 'Memory', value: `${piStatus.memoryUsedPercent}%` }] : []),
-                    ...(piStatus && piStatus.diskUsedPercent !== null ? [{ key: 'Disk', value: `${piStatus.diskUsedPercent}%` }] : []),
-                    ...(piStatus && piStatus.relayStatus ? [{ key: 'Relay', value: piStatus.relayStatus.pin.replace(/\s/g, '') }] : []),
-                    { key: 'Last Updated', value: lastUpdated },
-                  ].map(row => (
-                    <p key={row.key} className="whitespace-pre">
-                      <span className="text-[#8a8477]">{row.key.padEnd(15, '.')}</span>
-                      <span className="text-[#D4AF37] font-medium">{row.value}</span>
-                    </p>
+                    [
+                      { key: 'Hardware', value: piStatus?.device ?? healthData.system },
+                      { key: 'OS', value: 'Raspberry Pi OS Lite' },
+                      { key: 'Architecture', value: 'ARM64' },
+                    ],
+                    [
+                      { key: 'Frontend', value: 'React 19 + TypeScript' },
+                      { key: 'Backend', value: 'Node.js + Express' },
+                      { key: 'Build', value: 'Vite + esbuild' },
+                      { key: 'Database', value: 'JSON (No SQL)' },
+                      { key: 'Deployment', value: 'GitHub → systemd' },
+                      { key: 'Hosting', value: 'Self-hosted' },
+                      ...(piStatus && piStatus.relayStatus ? [{ key: 'Relay', value: `${piStatus.relayStatus.pin.replace(/\s/g, '')} (Candle)` }] : []),
+                    ],
+                    [
+                      { key: 'Serving Since', value: '1 August 2026' },
+                      { key: 'Uptime', value: formatUptimeWords(piStatus?.uptimeSeconds ?? healthData.uptimeSeconds) },
+                    ],
+                    [
+                      ...(piStatus && piStatus.cpuTempC !== null ? [{ key: 'CPU Temp', value: `${piStatus.cpuTempC.toFixed(1)}°C` }] : []),
+                      ...(piStatus && piStatus.cpuLoadPercent !== null ? [{ key: 'CPU Load', value: `${piStatus.cpuLoadPercent}%` }] : []),
+                      ...(piStatus && piStatus.memoryUsedPercent !== null ? [{ key: 'Memory', value: `${piStatus.memoryUsedPercent}%` }] : []),
+                      ...(piStatus && piStatus.diskUsedPercent !== null ? [{ key: 'Disk', value: `${piStatus.diskUsedPercent}%` }] : []),
+                    ],
+                    ...(lastUpdated ? [[{ key: 'Last Updated', value: lastUpdated }]] : []),
+                  ].map((group, gi) => (
+                    <div key={gi} className={gi === 0 ? '' : 'mt-3'}>
+                      {group.map(row => (
+                        <p key={row.key} className="whitespace-pre">
+                          <span className="text-[#8a8477]">{row.key.padEnd(15, '.')}</span>
+                          <span className="text-[#D4AF37] font-medium">{row.value}</span>
+                        </p>
+                      ))}
+                    </div>
                   ))}
                 </div>
               </div>
