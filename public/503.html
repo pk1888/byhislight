@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Sanctuary is Full • By His Light</title>
+  <title>The Home Altar is Temporarily Unavailable • By His Light</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap" rel="stylesheet">
@@ -119,14 +119,14 @@
       <path d="M12 2v20M6 8h12"></path>
     </svg>
 
-    <h1>The Sanctuary is Full</h1>
+    <h1>The Home Altar is Temporarily Unavailable</h1>
 
     <div class="scripture">
-      "Be still, and know that I am God." - Psalm 46:10
+      "The light shines in the darkness, and the darkness has not overcome it." - John 1:5
     </div>
 
     <p class="message">
-      Our little micro-chapel in Scotland is currently filled with quiet visitors. Please pause, take a breath, and step inside again in a few moments.
+      This may be due to a restart, a temporary power interruption, or a small update being installed. Please try again in a few moments.
     </p>
 
     <button class="btn" onclick="window.location.reload()">Step Inside Again</button>
@@ -135,16 +135,19 @@
       Auto-retrying in <span id="secs">15</span> seconds...
     </div>
 
+    <p style="margin-top:30px;font-size:.85rem;color:#8A8272">
+      The candle will relight automatically as soon as the altar reconnects.
+    </p>
+
     <div class="footer-telemetry">
-      Raspberry Pi Zero 2 W on Paul's Home Altar in Scotland<br>
-      Inverclyde, Scotland • Real-Time Altar Candle Relay Active
+      Hosted from a Raspberry Pi Zero 2 W<br>
+      Paul's Home Altar • Inverclyde, Scotland
     </div>
   </div>
 
   <script>
     let secondsLeft = 15;
     const secsEl = document.getElementById('secs');
-    const timerText = document.getElementById('timerText');
 
     const interval = setInterval(() => {
       secondsLeft--;

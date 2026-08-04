@@ -38,11 +38,30 @@ interface PiStatus {
   diskUsedPercent: number | null;
   diskUsedGB: number | null;
   diskTotalGB: number | null;
+  websiteService: 'active' | 'inactive' | 'unknown';
+  cloudflaredService: 'active' | 'inactive' | 'unknown';
+  candleRelay: 'connected' | 'disconnected' | 'unknown';
+  lastBootTime: string | null;
   relayStatus: {
     connected: boolean;
     pin: string;
     label: string;
   };
+  recentEvents?: Array<{ ts: string; type: string; label: string }>;
+}
+
+interface SanctuaryEvent {
+  ts: string;
+  type: string;
+  label: string;
+}
+
+type RowTone = 'gold' | 'green' | 'amber' | 'red';
+
+interface NeofetchRow {
+  key: string;
+  value: string;
+  tone?: RowTone;
 }
 
 export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
@@ -67,6 +86,34 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
   const paulAge = calculateAge('1984-03-01');
 
   const scotlandClock = () => new Date().toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+
+  const stateTone = (state?: string): RowTone => {
+    if (state === 'active' || state === 'connected') return 'green';
+    if (state === 'inactive' || state === 'disconnected') return 'red';
+    return 'amber';
+  };
+
+  const lastBootDisplay = piStatus?.lastBootTime
+    ? new Date(piStatus.lastBootTime).toLocaleString('en-GB', {
+        timeZone: 'Europe/London',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : 'unknown';
+
+  const formatRelativeTime = (ts: string): string => {
+    const diffMs = Date.now() - new Date(ts).getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return 'just now';
+    if (mins < 60) return mins === 1 ? '1 min ago' : `${mins} mins ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return hours === 1 ? '1 hour ago' : `${hours} hours ago`;
+    const days = Math.floor(hours / 24);
+    return days === 1 ? '1 day ago' : `${days} days ago`;
+  };
 
   useEffect(() => {
     const load = () => {
@@ -345,13 +392,27 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
                           ? [{ key: 'Disk', value: `${piStatus.diskUsedPercent}%` }]
                           : []),
                     ],
+                    [
+                      { key: 'Website', value: piStatus?.websiteService ?? 'unknown', tone: stateTone(piStatus?.websiteService) },
+                      { key: 'Tunnel', value: piStatus?.cloudflaredService ?? 'unknown', tone: stateTone(piStatus?.cloudflaredService) },
+                      { key: 'Candle Relay', value: piStatus?.candleRelay ?? 'unknown', tone: stateTone(piStatus?.candleRelay) },
+                      { key: 'Last Boot', value: lastBootDisplay },
+                    ],
                     ...(lastUpdated ? [[{ key: 'Last Updated', value: lastUpdated }]] : []),
                   ].map((group, gi) => (
                     <div key={gi} className={gi === 0 ? '' : 'mt-3'}>
                       {group.map(row => (
                         <p key={row.key} className="whitespace-pre">
                           <span className="text-[#8a8477]">{row.key.padEnd(15, '.')}</span>
-                          <span className="text-[#D4AF37] font-medium">{row.value}</span>
+                          <span className={
+                            row.tone === 'green'
+                              ? 'text-[#3aa76d] font-medium'
+                              : row.tone === 'red'
+                                ? 'text-[#f25f5c] font-medium'
+                                : row.tone === 'amber'
+                                  ? 'text-[#c5a059] font-medium'
+                                  : 'text-[#D4AF37] font-medium'
+                          }>{row.value}</span>
                         </p>
                       ))}
                     </div>
@@ -359,6 +420,26 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
                 </div>
               </div>
             </div>
+
+            {piStatus?.recentEvents && piStatus.recentEvents.length > 0 && (
+              <div className="rounded-xl border border-[#2d2822] bg-[#0f0e0c] overflow-hidden shadow-inner">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#2d2822] bg-[#16140f]">
+                  <span className="font-mono text-xs tracking-wide text-[#8a8477]">recent events</span>
+                  <span className="font-mono text-[11px] text-[#8a8477]">{piStatus.recentEvents.length} shown</span>
+                </div>
+                <ul className="px-5 py-3 space-y-1.5 font-mono text-sm">
+                  {piStatus.recentEvents.map(ev => (
+                    <li key={ev.ts + ev.type} className="flex items-center justify-between gap-4">
+                      <span className="flex items-center gap-2 text-[#ece4d6]">
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#D4AF37]/70" />
+                        {ev.label}
+                      </span>
+                      <span className="text-[#8a8477] text-xs whitespace-nowrap">{formatRelativeTime(ev.ts)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <p className="flex items-center justify-center gap-1.5 text-sm font-sans text-stone-500 dark:text-stone-300">
               🕯️ This altar has been quietly serving visitors for {formatUptimeWords(piStatus?.uptimeSeconds ?? healthData.uptimeSeconds)}.

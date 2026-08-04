@@ -58,19 +58,19 @@ export const FullSanctuaryView: React.FC<FullSanctuaryViewProps> = ({ settings, 
         <div className="space-y-3">
           <div className="inline-flex items-center space-x-2 text-xs font-mono tracking-[0.18em] uppercase font-bold text-[#D4AF37] drop-shadow-[0_0_10px_rgba(212,175,55,0.6)]">
             <ShieldAlert className="w-3.5 h-3.5" />
-            <span>Capacity Exceeded • 503 Fallback</span>
+            <span>Temporarily Unavailable • 503 Fallback</span>
           </div>
 
           <h1 className="font-heading text-3xl sm:text-4xl font-bold tracking-tight text-[#F5EBD8] dark:text-[#F5EBD8]">
-            The Sanctuary is Full
+            The Home Altar is Temporarily Unavailable
           </h1>
         </div>
 
-        {/* Psalm 46:10 Quote */}
+        {/* John 1:5 Quote */}
         <blockquote className="font-scripture italic text-xl sm:text-2xl text-[#D4AF37] leading-relaxed px-2">
-          "Be still, and know that I am God."
+          "The light shines in the darkness, and the darkness has not overcome it."
           <footer className="text-sm font-sans not-italic text-stone-400 font-normal mt-1">
-            - Psalm 46:10
+            - John 1:5
           </footer>
         </blockquote>
 
@@ -78,7 +78,7 @@ export const FullSanctuaryView: React.FC<FullSanctuaryViewProps> = ({ settings, 
         <p className={`text-base sm:text-lg leading-relaxed max-w-md mx-auto font-sans ${
           isDark ? 'text-[#C2B7A5]' : 'text-stone-700'
         }`}>
-          Our little micro-chapel in Scotland is currently filled with quiet visitors. Please pause, take a breath, and step inside again in a few moments.
+          This may be due to a restart, a temporary power interruption, or a small update being installed. Please try again in a few moments.
         </p>
 
         {/* Action Controls */}
@@ -100,9 +100,9 @@ export const FullSanctuaryView: React.FC<FullSanctuaryViewProps> = ({ settings, 
 
         {/* Telemetry Note */}
         <div className="pt-6 border-t border-stone-800/60 text-xs font-sans text-stone-400 leading-relaxed space-y-1">
-          <div>Raspberry Pi Zero 2 W on My Home Altar in Scotland</div>
+          <div>Hosted from a Raspberry Pi Zero 2 W</div>
           <div className="text-[#D4AF37]/80 text-[11px]">
-            Inverclyde, Scotland • Connected to My Prayer Altar
+            Paul's Home Altar • Inverclyde, Scotland
           </div>
         </div>
       </div>

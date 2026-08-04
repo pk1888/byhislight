@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Sanctuary is Full • By His Light</title>
+  <title>The Home Altar is Temporarily Unavailable • By His Light</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap" rel="stylesheet">
@@ -104,26 +104,6 @@
       color: #7A7265;
       line-height: 1.5;
     }
-    .pi-vitals {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 4px 16px;
-      margin-top: 10px;
-      font-size: 0.7rem;
-      letter-spacing: 0.03em;
-      color: #8A8272;
-    }
-    .pi-dot {
-      display: inline-block;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background-color: #4CAF50;
-      box-shadow: 0 0 6px #4CAF50;
-      margin-right: 5px;
-      animation: pulse 2.5s infinite ease-in-out;
-    }
     .retry-countdown {
       font-size: 0.8rem;
       color: #A39682;
@@ -139,70 +119,44 @@
       <path d="M12 2v20M6 8h12"></path>
     </svg>
 
-    <h1>The Sanctuary is Full</h1>
+    <h1>The Home Altar is Temporarily Unavailable</h1>
 
     <div class="scripture">
-      "Be still, and know that I am God." - Psalm 46:10
+      "The light shines in the darkness, and the darkness has not overcome it." - John 1:5
     </div>
 
     <p class="message">
-      Our little micro-chapel in Scotland is currently filled with quiet visitors. Please pause, take a breath, and step inside again in a few moments.
+      This may be due to a restart, a temporary power interruption, or a small update being installed. Please try again in a few moments.
     </p>
 
-    <button class="btn" onclick="window.location.href='/'">Step Inside Again</button>
+    <button class="btn" onclick="window.location.reload()">Step Inside Again</button>
 
     <div class="retry-countdown" id="timerText">
       Auto-retrying in <span id="secs">15</span> seconds...
     </div>
 
+    <p style="margin-top:30px;font-size:.85rem;color:#8A8272">
+      The candle will relight automatically as soon as the altar reconnects.
+    </p>
+
     <div class="footer-telemetry">
-      Raspberry Pi Zero 2 W on Paul's Home Altar in Scotland<br>
-      Inverclyde, Scotland • Real-Time Altar Candle Relay Active
-      <div class="pi-vitals" id="piVitals"></div>
+      Hosted from a Raspberry Pi Zero 2 W<br>
+      Paul's Home Altar • Inverclyde, Scotland
     </div>
   </div>
 
   <script>
     let secondsLeft = 15;
     const secsEl = document.getElementById('secs');
-    const timerText = document.getElementById('timerText');
 
     const interval = setInterval(() => {
       secondsLeft--;
       if (secsEl) secsEl.textContent = secondsLeft;
       if (secondsLeft <= 0) {
         clearInterval(interval);
-        window.location.href = '/';
+        window.location.reload();
       }
     }, 1000);
-
-    const formatUptime = (totalSeconds) => {
-      const days = Math.floor(totalSeconds / 86400);
-      const hours = Math.floor((totalSeconds % 86400) / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      if (days > 0) return `${days}d ${hours}h ${minutes}m`;
-      if (hours > 0) return `${hours}h ${minutes}m`;
-      return `${minutes}m`;
-    };
-
-    const piVitalsEl = document.getElementById('piVitals');
-    fetch('/api/pi/status')
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (!piVitalsEl || !data) return;
-        const parts = [];
-        if (data.online) {
-          parts.push('<span><span class="pi-dot"></span>Online</span>');
-        }
-        if (data.cpuTempC !== null && data.cpuTempC !== undefined) {
-          parts.push(`<span>CPU ${data.cpuTempC.toFixed(1)}°C</span>`);
-        }
-        if (data.uptimeSeconds) {
-          parts.push(`<span>Up ${formatUptime(data.uptimeSeconds)}</span>`);
-        }
-        piVitalsEl.innerHTML = parts.join('');
-      })
-      .catch(() => {});
   </script>
 </body>
 </html>

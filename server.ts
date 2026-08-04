@@ -2,7 +2,7 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
-import { exec } from 'child_process';
+import { exec, execFile } from 'child_process';
 import { createServer as createViteServer } from 'vite';
 
 const app = express();
@@ -176,6 +176,107 @@ function writeDb(db: SanctuaryDb) {
   }
 }
 
+// Application-maintained, sanitised event log (never journalctl)
+interface SanctuaryEvent {
+  ts: string;
+  type: string;
+  label: string;
+}
+
+interface EventsFile {
+  lastBootAt?: string;
+  events: SanctuaryEvent[];
+}
+
+const EVENTS_FILE = path.join(DATA_DIR, 'sanctuary-events.json');
+const MAX_EVENTS = 20;
+
+function readEvents(): EventsFile {
+  try {
+    if (fs.existsSync(EVENTS_FILE)) {
+      const raw = fs.readFileSync(EVENTS_FILE, 'utf-8');
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.events)) {
+        return { lastBootAt: parsed.lastBootAt, events: parsed.events };
+      }
+    }
+  } catch (err) {
+    console.error('Error reading sanctuary events:', err);
+  }
+  return { events: [] };
+}
+
+function writeEvents(file: EventsFile) {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    fs.writeFileSync(EVENTS_FILE, JSON.stringify(file, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error writing sanctuary events:', err);
+  }
+}
+
+function appendEvent(file: EventsFile, type: string, label: string) {
+  file.events.unshift({ ts: new Date().toISOString(), type, label });
+  if (file.events.length > MAX_EVENTS) {
+    file.events.length = MAX_EVENTS;
+  }
+  writeEvents(file);
+}
+
+// Reads a systemd unit state safely. Never exposes unit logs, paths or args.
+type ServiceState = 'active' | 'inactive' | 'unknown';
+
+function getSystemdState(service: string): Promise<ServiceState> {
+  return new Promise((resolve) => {
+    execFile('systemctl', ['is-active', service], { timeout: 3000 }, (error, stdout) => {
+      const state = (stdout || '').trim().toLowerCase();
+      if (state === 'active') {
+        resolve('active');
+        return;
+      }
+      if (state === 'inactive' || state === 'failed' || state === 'activating' || state === 'deactivating') {
+        resolve('inactive');
+        return;
+      }
+      // Missing unit, missing systemctl, or unreadable state
+      resolve('unknown');
+    });
+  });
+}
+
+// Records what the chapel app itself can observe at startup.
+async function seedStartupEvents() {
+  const file = readEvents();
+  const now = Date.now();
+  const bootMs = now - os.uptime() * 1000;
+  const bootAt = new Date(bootMs).toISOString();
+  const prevBootMs = file.lastBootAt ? new Date(file.lastBootAt).getTime() : 0;
+  const isNewBoot = !prevBootMs || Math.abs(prevBootMs - bootMs) > 120000;
+
+  if (isNewBoot) {
+    appendEvent(file, 'system_started', 'System started');
+    file.lastBootAt = bootAt;
+  }
+
+  const lastSiteEvent = file.events.find(e => e.type === 'website_started');
+  if (!lastSiteEvent || now - new Date(lastSiteEvent.ts).getTime() > 60000) {
+    appendEvent(file, 'website_started', 'Website service started');
+  }
+
+  const cloudflaredState = await getSystemdState('cloudflared');
+  if (isNewBoot && cloudflaredState === 'active') {
+    appendEvent(file, 'cloudflare_connected', 'Cloudflare Tunnel connected');
+  }
+
+  if (!file.events.some(e => e.type === 'site_deployed')) {
+    appendEvent(file, 'site_deployed', 'Site deployment completed');
+  }
+
+  writeEvents(file);
+}
+
 // Security rate limiter helper (in-memory sliding window)
 const rateLimits: Record<string, number[]> = {};
 
@@ -202,9 +303,9 @@ app.get(['/503', '/503.html', '/full-sanctuary', '/full-sanctuary.html'], (req, 
       <!DOCTYPE html>
       <html>
       <body style="background:#121110;color:#F5EBD8;font-family:sans-serif;text-align:center;padding:50px;">
-        <h1>The Sanctuary is Full</h1>
-        <p><em>"Be still, and know that I am God." - Psalm 46:10</em></p>
-        <p>Our little micro-chapel in Scotland is currently filled with quiet visitors. Please pause, take a breath, and step inside again in a few moments.</p>
+        <h1>The Home Altar is Temporarily Unavailable</h1>
+        <p><em>"The light shines in the darkness, and the darkness has not overcome it." - John 1:5</em></p>
+        <p>This may be due to a restart, a temporary power interruption, or a small update being installed. Please try again in a few moments.</p>
       </body>
       </html>
     `);
@@ -338,8 +439,17 @@ function getDiskUsedPercent(): number | null {
 
 // GET live Raspberry Pi status (minimal, exposed data only)
 app.get('/api/pi/status', async (req, res) => {
-  const cpuTempC = await getCpuTemperature();
+  res.set('Cache-Control', 'no-store');
+
+  const [cpuTempC, websiteService, cloudflaredService] = await Promise.all([
+    getCpuTemperature(),
+    getSystemdState('byhislight'),
+    getSystemdState('cloudflared'),
+  ]);
   const diskUsage = getDiskUsage();
+  const eventsFile = readEvents();
+  const bootTime = new Date(Date.now() - os.uptime() * 1000).toISOString();
+  const relayConnected = true;
 
   res.json({
     online: true,
@@ -352,11 +462,20 @@ app.get('/api/pi/status', async (req, res) => {
     diskUsedPercent: getDiskUsedPercent(),
     diskUsedGB: diskUsage ? diskUsage.usedGB : null,
     diskTotalGB: diskUsage ? diskUsage.totalGB : null,
+    websiteService,
+    cloudflaredService,
+    candleRelay: relayConnected ? 'connected' : 'disconnected',
+    lastBootTime: bootTime,
     relayStatus: {
-      connected: true,
+      connected: relayConnected,
       pin: 'GPIO 18',
       label: 'Candle Relay Connected'
-    }
+    },
+    recentEvents: (eventsFile.events || []).slice(0, 6).map(e => ({
+      ts: e.ts,
+      type: e.type,
+      label: e.label
+    }))
   });
 });
 
@@ -570,6 +689,8 @@ async function startServer() {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
+
+  await seedStartupEvents();
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Sanctuary Chapel server running at http://0.0.0.0:${PORT}`);
