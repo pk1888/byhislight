@@ -245,15 +245,20 @@ interface SanctuaryEvent {
   ts: string;
   type: string;
   label: string;
+  level: 'shown' | 'hidden';
 }
 
 interface EventsFile {
   lastBootAt?: string;
+  lastCommit?: string;
   events: SanctuaryEvent[];
 }
 
 const EVENTS_FILE = path.join(DATA_DIR, 'sanctuary-events.json');
-const MAX_EVENTS = 20;
+const MAX_EVENTS = 40;
+
+// Dev/restart noise that is recorded for diagnostics but never shown in the UI
+const DEV_NOISE_TYPES = new Set(['website_started']);
 
 function readEvents(): EventsFile {
   try {
@@ -261,7 +266,13 @@ function readEvents(): EventsFile {
       const raw = fs.readFileSync(EVENTS_FILE, 'utf-8');
       const parsed = JSON.parse(raw);
       if (parsed && Array.isArray(parsed.events)) {
-        return { lastBootAt: parsed.lastBootAt, events: parsed.events };
+        const events = parsed.events.map((e: SanctuaryEvent) => ({
+          ts: e.ts,
+          type: e.type,
+          label: e.label,
+          level: DEV_NOISE_TYPES.has(e.type) ? 'hidden' as const : (e.level || 'shown' as const)
+        }));
+        return { lastBootAt: parsed.lastBootAt, lastCommit: parsed.lastCommit, events };
       }
     }
   } catch (err) {
@@ -281,8 +292,8 @@ function writeEvents(file: EventsFile) {
   }
 }
 
-function appendEvent(file: EventsFile, type: string, label: string) {
-  file.events.unshift({ ts: new Date().toISOString(), type, label });
+function appendEvent(file: EventsFile, type: string, label: string, level: 'shown' | 'hidden' = 'shown') {
+  file.events.unshift({ ts: new Date().toISOString(), type, label, level });
   if (file.events.length > MAX_EVENTS) {
     file.events.length = MAX_EVENTS;
   }
@@ -310,7 +321,48 @@ function getSystemdState(service: string): Promise<ServiceState> {
   });
 }
 
-// Records what the chapel app itself can observe at startup.
+// Records what the chapel app itself can observe at startup. Dev and restart
+// noise is kept hidden; only meaningful, Pi-relevant events are shown.
+const SHUTDOWN_FLAG_FILE = path.join(DATA_DIR, 'clean-shutdown');
+
+function markCleanShutdown() {
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(SHUTDOWN_FLAG_FILE, String(Date.now()), 'utf-8');
+  } catch {
+    // best effort only
+  }
+}
+
+function clearCleanShutdown() {
+  try {
+    if (fs.existsSync(SHUTDOWN_FLAG_FILE)) fs.unlinkSync(SHUTDOWN_FLAG_FILE);
+  } catch {
+    // best effort only
+  }
+}
+
+function wasCleanShutdown(): boolean {
+  try {
+    return fs.existsSync(SHUTDOWN_FLAG_FILE);
+  } catch {
+    return false;
+  }
+}
+
+process.on('SIGTERM', () => { markCleanShutdown(); process.exit(0); });
+process.on('SIGINT', () => { markCleanShutdown(); process.exit(0); });
+
+// Current git short commit, or null when git is unavailable (e.g. not a repo)
+function getCurrentCommit(): Promise<string | null> {
+  return new Promise((resolve) => {
+    execFile('git', ['rev-parse', '--short', 'HEAD'], { timeout: 3000 }, (error, stdout) => {
+      const commit = (stdout || '').trim();
+      resolve(error ? null : (commit || null));
+    });
+  });
+}
+
 async function seedStartupEvents() {
   const file = readEvents();
   const now = Date.now();
@@ -320,22 +372,39 @@ async function seedStartupEvents() {
   const isNewBoot = !prevBootMs || Math.abs(prevBootMs - bootMs) > 120000;
 
   if (isNewBoot) {
+    const cleanShutdown = wasCleanShutdown();
+    clearCleanShutdown();
     appendEvent(file, 'system_started', 'System started');
+    if (prevBootMs && !cleanShutdown) {
+      appendEvent(file, 'unexpected_shutdown', 'Unexpected shutdown detected');
+      appendEvent(file, 'system_recovered', 'System recovered successfully');
+    }
     file.lastBootAt = bootAt;
   }
 
+  // App process start (dev/restart noise) - recorded but never shown
   const lastSiteEvent = file.events.find(e => e.type === 'website_started');
   if (!lastSiteEvent || now - new Date(lastSiteEvent.ts).getTime() > 60000) {
-    appendEvent(file, 'website_started', 'Website service started');
+    appendEvent(file, 'website_started', 'Website service started', 'hidden');
+  }
+
+  const isProduction = process.env.NODE_ENV === 'production';
+  if (isProduction) {
+    const lastDeploy = file.events.find(e => e.type === 'site_deployed');
+    if (!lastDeploy || now - new Date(lastDeploy.ts).getTime() > 60 * 60 * 1000) {
+      appendEvent(file, 'site_deployed', 'Deployment completed');
+    }
+
+    const gitCommit = await getCurrentCommit();
+    if (gitCommit && file.lastCommit !== gitCommit) {
+      appendEvent(file, 'app_updated', `Application updated (commit ${gitCommit})`);
+      file.lastCommit = gitCommit;
+    }
   }
 
   const cloudflaredState = await getSystemdState('cloudflared');
   if (isNewBoot && cloudflaredState === 'active') {
     appendEvent(file, 'cloudflare_connected', 'Cloudflare Tunnel connected');
-  }
-
-  if (!file.events.some(e => e.type === 'site_deployed')) {
-    appendEvent(file, 'site_deployed', 'Site deployment completed');
   }
 
   writeEvents(file);
@@ -512,6 +581,13 @@ app.get('/api/pi/status', async (req, res) => {
   ]);
   const diskUsage = getDiskUsage();
   const eventsFile = readEvents();
+
+  if (cpuTempC !== null && parseFloat(cpuTempC) >= 75) {
+    const lastTemp = eventsFile.events.find(e => e.type === 'high_temperature');
+    if (!lastTemp || Date.now() - new Date(lastTemp.ts).getTime() > 6 * 60 * 60 * 1000) {
+      appendEvent(eventsFile, 'high_temperature', `High temperature detected (${cpuTempC}°C)`);
+    }
+  }
   const bootTime = new Date(Date.now() - os.uptime() * 1000).toISOString();
   const relayConnected = true;
 
@@ -535,11 +611,14 @@ app.get('/api/pi/status', async (req, res) => {
       pin: 'GPIO 18',
       label: 'Candle Relay Connected'
     },
-    recentEvents: (eventsFile.events || []).slice(0, 6).map(e => ({
-      ts: e.ts,
-      type: e.type,
-      label: e.label
-    }))
+    recentEvents: (eventsFile.events || [])
+      .filter(e => e.level !== 'hidden')
+      .slice(0, 6)
+      .map(e => ({
+        ts: e.ts,
+        type: e.type,
+        label: e.label
+      }))
   });
 });
 

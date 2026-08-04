@@ -9,6 +9,16 @@ import holyFamilyPhoto2 from '../assets/images/holy-family-church/photo-2.avif';
 import holyFamilyPhoto3 from '../assets/images/holy-family-church/photo-3.avif';
 import holyFamilyPhoto4 from '../assets/images/holy-family-church/photo-4.avif';
 
+// Meaningful, Pi-relevant events get a small icon; dev noise never reaches here
+const EVENT_ICONS: Record<string, string> = {
+  site_deployed: '🚀',
+  cloudflare_connected: '☁️',
+  app_updated: '📦',
+  high_temperature: '🌡️',
+  unexpected_shutdown: '⚠️',
+  system_recovered: '🔄'
+};
+
 interface AboutViewProps {
   settings: AppSettings;
 }
@@ -432,7 +442,7 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
                     <li key={ev.ts + ev.type} className="flex items-center justify-between gap-4">
                       <span className="flex items-center gap-2 text-[#ece4d6]">
                         <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#D4AF37]/70" />
-                        {ev.label}
+                        {EVENT_ICONS[ev.type] ? `${EVENT_ICONS[ev.type]} ` : ''}{ev.label}
                       </span>
                       <span className="text-[#8a8477] text-xs whitespace-nowrap">{formatRelativeTime(ev.ts)}</span>
                     </li>

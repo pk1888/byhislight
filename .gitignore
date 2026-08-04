@@ -8,3 +8,4 @@ coverage/
 !.env.example
 data/sanctuary-events.json
 data/delete-code-secret
+data/clean-shutdown
