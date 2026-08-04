@@ -15,6 +15,7 @@ export type ViewMode =
   | 'calendar'
   | 'saints'
   | 'reflection'
+  | 'guestbook'
   | 'silence'
   | 'about'
   | 'full-sanctuary';
@@ -60,14 +61,15 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   const navItems: { id: ViewMode; label: string; icon?: React.ReactNode }[] = [
-    { id: 'gospel', label: "Daily Gospel" },
+    { id: 'gospel', label: 'Gospel' },
     { id: 'prayers', label: 'Prayers' },
     { id: 'rosary', label: 'Holy Rosary' },
     { id: 'candle', label: 'Light a Candle' },
-    { id: 'commandments', label: '10 Commandments' },
+    { id: 'commandments', label: 'Commandments' },
     { id: 'calendar', label: 'Calendar' },
     { id: 'saints', label: 'Saints' },
     { id: 'reflection', label: 'Reflection' },
+    { id: 'guestbook', label: "Visitors' Book" },
     { id: 'about', label: 'About' },
   ];
 

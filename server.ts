@@ -2,6 +2,7 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
+import crypto from 'crypto';
 import { exec, execFile } from 'child_process';
 import { createServer as createViteServer } from 'vite';
 
@@ -30,6 +31,17 @@ interface QueuedCandle {
   queuedAt: number;
 }
 
+interface GuestbookEntry {
+  id: string;
+  name?: string;
+  country?: string;
+  message: string;
+  anonymous: boolean;
+  createdAt: string;
+  approved: boolean;
+  ipHash: string;
+}
+
 interface SanctuaryDb {
   totalCandlesLit: number;
   lastAltarPulseAt?: string;
@@ -45,6 +57,7 @@ interface SanctuaryDb {
   }>;
   slots: CandleSlot[];
   candleQueue: QueuedCandle[];
+  guestbook: GuestbookEntry[];
 }
 
 const DEFAULT_DB: SanctuaryDb = {
@@ -95,6 +108,27 @@ const DEFAULT_DB: SanctuaryDb = {
       createdAt: new Date(Date.now() - 3600000 * 36).toISOString(),
       status: 'approved',
       prayedCount: 84
+    }
+  ],
+  guestbook: [
+    {
+      id: 'g_seed_1',
+      name: 'Margaret',
+      country: 'Ireland',
+      message: 'What a peaceful corner of the internet. Praying for all who stop here today.',
+      anonymous: false,
+      createdAt: new Date(Date.now() - 3600000 * 30).toISOString(),
+      approved: true,
+      ipHash: hashIp('127.0.0.1')
+    },
+    {
+      id: 'g_seed_2',
+      country: 'United States',
+      message: 'Lord, bring peace to all who visit today.',
+      anonymous: true,
+      createdAt: new Date(Date.now() - 3600000 * 12).toISOString(),
+      approved: true,
+      ipHash: hashIp('127.0.0.1')
     }
   ]
 };
@@ -158,7 +192,11 @@ function readDb(): SanctuaryDb {
       return DEFAULT_DB;
     }
     const raw = fs.readFileSync(DB_FILE, 'utf-8');
-    return JSON.parse(raw);
+    const db = JSON.parse(raw) as SanctuaryDb;
+    if (!Array.isArray(db.guestbook)) {
+      db.guestbook = [];
+    }
+    return db;
   } catch (err) {
     console.error('Error reading sanctuary db:', err);
     return DEFAULT_DB;
@@ -175,6 +213,14 @@ function writeDb(db: SanctuaryDb) {
     console.error('Error writing sanctuary db:', err);
   }
 }
+
+// Hashes an IP address so the database never stores raw visitor IPs
+function hashIp(ip: string): string {
+  return crypto.createHash('sha256').update(`${ip}|byhislight-guestbook`).digest('hex').slice(0, 16);
+}
+
+// Basic spam protection: reject anything that looks like a link
+const LINK_PATTERN = /(https?:\/\/|www\.|\S+\.(?:com|net|org|io|co|uk|gg|link|me|xyz|info|biz|live|site|shop)\b)/i;
 
 // Application-maintained, sanitised event log (never journalctl)
 interface SanctuaryEvent {
@@ -635,6 +681,139 @@ app.post('/api/prayers/:id/pray', (req, res) => {
   writeDb(db);
 
   res.json({ success: true, prayedCount: prayer.prayedCount });
+});
+
+// VISITORS' BOOK (guestbook) endpoints
+
+// A request is treated as "local" only when it arrives over a loopback socket
+// address. Header values such as X-Forwarded-For / CF-Connecting-IP are never
+// trusted to grant access; their presence only marks the request as having
+// passed through a proxy, which denies it.
+function isLoopbackAddress(addr: string | undefined): boolean {
+  if (!addr) return false;
+  const a = addr.toLowerCase();
+  return a === '127.0.0.1' || a === '::1' || a === '::ffff:127.0.0.1';
+}
+
+function isProxiedRequest(req: express.Request): boolean {
+  return Boolean(
+    req.headers['cf-connecting-ip'] ||
+    req.headers['cf-ray'] ||
+    req.headers['x-forwarded-for'] ||
+    req.headers['x-forwarded-proto']
+  );
+}
+
+// Admin guestbook routes are only served to local moderators. Any request that
+// did not originate on loopback - or that travelled through a proxy such as
+// Cloudflare - is answered with a plain 404 so the admin API stays unadvertised.
+function localOnlyAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const isLocal = isLoopbackAddress(req.socket.remoteAddress) && !isProxiedRequest(req);
+  if (!isLocal) {
+    res.status(404).json({ error: 'Not found' });
+    return;
+  }
+  next();
+}
+
+// POST leave a message (held for quiet approval before appearing)
+app.post('/api/guestbook', (req, res) => {
+  const clientIp = req.ip || req.socket.remoteAddress || '127.0.0.1';
+  if (isRateLimited(clientIp, 3, 3600000)) {
+    res.status(429).json({ error: 'To keep our Visitors\' Book a quiet and peaceful place, messages are limited to 3 per hour per visitor. Please return in a little while to leave another message.' });
+    return;
+  }
+
+  const { name, country, message, anonymous } = req.body;
+
+  if (!message || typeof message !== 'string' || message.trim().length === 0) {
+    res.status(400).json({ error: 'A short prayer or message is required.' });
+    return;
+  }
+  if (message.trim().length > 200) {
+    res.status(400).json({ error: 'Please keep your message to 200 characters or fewer.' });
+    return;
+  }
+
+  const cleanMessage = message.trim().slice(0, 200);
+  const cleanName = name && typeof name === 'string' ? name.trim().slice(0, 50) : undefined;
+  const cleanCountry = country && typeof country === 'string' ? country.trim().slice(0, 56) : undefined;
+
+  if (LINK_PATTERN.test(cleanMessage) || LINK_PATTERN.test(cleanName || '') || LINK_PATTERN.test(cleanCountry || '')) {
+    res.status(400).json({ error: 'Messages containing web links cannot be accepted. Please remove any links and try again.' });
+    return;
+  }
+
+  const isAnonymous = Boolean(anonymous);
+  const db = readDb();
+  const entry: GuestbookEntry = {
+    id: 'g_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+    name: isAnonymous ? undefined : cleanName,
+    country: cleanCountry,
+    message: cleanMessage,
+    anonymous: isAnonymous,
+    createdAt: new Date().toISOString(),
+    approved: false,
+    ipHash: hashIp(clientIp)
+  };
+
+  db.guestbook.unshift(entry);
+  writeDb(db);
+
+  res.json({
+    success: true,
+    status: 'pending',
+    message: 'Thank you. Your message has been received and will appear in the Visitors\' Book once it has been quietly approved.'
+  });
+});
+
+// GET approved messages, newest first (never exposes ipHash or moderation state)
+app.get('/api/guestbook', (req, res) => {
+  const db = readDb();
+  const approved = db.guestbook
+    .filter(e => e.approved)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .map(e => ({
+      id: e.id,
+      name: e.anonymous ? undefined : e.name,
+      country: e.country,
+      message: e.message,
+      createdAt: e.createdAt
+    }));
+  res.json(approved);
+});
+
+// ADMIN: list every entry (including pending) for moderation
+app.get('/api/admin/guestbook', localOnlyAdmin, (req, res) => {
+  const db = readDb();
+  const entries = db.guestbook
+    .slice()
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  res.json(entries);
+});
+
+// ADMIN: approve or hide an entry
+app.patch('/api/admin/guestbook/:id', localOnlyAdmin, (req, res) => {
+  const { id } = req.params;
+  const { approved } = req.body;
+  const db = readDb();
+  const entry = db.guestbook.find(e => e.id === id);
+  if (!entry) {
+    res.status(404).json({ error: 'Entry not found' });
+    return;
+  }
+  entry.approved = Boolean(approved);
+  writeDb(db);
+  res.json({ success: true, approved: entry.approved });
+});
+
+// ADMIN: remove an entry entirely
+app.delete('/api/admin/guestbook/:id', localOnlyAdmin, (req, res) => {
+  const { id } = req.params;
+  const db = readDb();
+  db.guestbook = db.guestbook.filter(e => e.id !== id);
+  writeDb(db);
+  res.json({ success: true });
 });
 
 // ADMIN API endpoints

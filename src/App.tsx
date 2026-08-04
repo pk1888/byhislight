@@ -10,6 +10,7 @@ import { CandleRoom } from './components/CandleRoom';
 import { LiturgicalCalendarView } from './components/LiturgicalCalendarView';
 import { SaintsView } from './components/SaintsView';
 import { DailyReflectionView } from './components/DailyReflectionView';
+import { VisitorsBookView } from './components/VisitorsBookView';
 import { SilenceModeView } from './components/SilenceModeView';
 import { AboutView } from './components/AboutView';
 import { FullSanctuaryView } from './components/FullSanctuaryView';
@@ -94,6 +95,8 @@ export default function App() {
         return <SaintsView settings={settings} />;
       case 'reflection':
         return <DailyReflectionView settings={settings} />;
+      case 'guestbook':
+        return <VisitorsBookView settings={settings} />;
       case 'about':
         return <AboutView settings={settings} />;
       case 'full-sanctuary':

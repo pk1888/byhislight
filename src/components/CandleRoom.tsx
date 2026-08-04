@@ -81,6 +81,7 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedCandleId, setSelectedCandleId] = useState<string | null>(null);
+  const [leaveInVisitorsBook, setLeaveInVisitorsBook] = useState<boolean>(false);
 
   const previewCandle = ALTAR_CANDLES[previewIndex % ALTAR_CANDLES.length];
   const displayedCandle = selectedCandleId
@@ -220,6 +221,19 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
       setLastLitCandle(chosenCandle);
       setLastOfferMessage(data.altarPulseMessage);
       setHasLitInSession(true);
+
+      // Optionally leave the prayer in the Visitors' Book (goes to quiet approval)
+      if (leaveInVisitorsBook && intention.trim().length > 0) {
+        fetch('/api/guestbook', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: intention.trim().slice(0, 200),
+            anonymous: true
+          })
+        }).catch(() => {});
+        setLeaveInVisitorsBook(false);
+      }
 
       const newRecord: UserCandleLog = {
         id: 'c_' + Date.now(),
@@ -466,6 +480,29 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
                     : 'bg-white border-[#ded1be] text-stone-900 placeholder-stone-500'
                 }`}
               />
+
+              {intention.trim().length > 0 && (
+                <label
+                  htmlFor="leave-in-visitors-book"
+                  className={`flex items-start gap-3 mt-3 cursor-pointer select-none text-sm ${
+                    isDark ? 'text-stone-300' : 'text-stone-700'
+                  }`}
+                >
+                  <input
+                    id="leave-in-visitors-book"
+                    type="checkbox"
+                    checked={leaveInVisitorsBook}
+                    onChange={(e) => setLeaveInVisitorsBook(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded accent-[#c5a059] focus:outline-none focus:ring-2 focus:ring-[#c5a059]"
+                  />
+                  <span>
+                    Leave this prayer in the Visitors' Book
+                    <span className={`block text-xs mt-0.5 ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
+                      It will appear anonymously once quietly approved.
+                    </span>
+                  </span>
+                </label>
+              )}
             </div>
 
             {errorMessage && (
