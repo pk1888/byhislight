@@ -112,30 +112,174 @@ export const LITURGICAL_SEASONS_DATA: Record<LiturgicalSeason, LiturgicalSeasonD
   }
 };
 
+const DAY = 24 * 60 * 60 * 1000;
+
+// DST-safe day arithmetic: JS normalises overflow/underflow in the Date
+// constructor against the local calendar, so wall-clock midnight stays put.
+function addDays(d: Date, n: number): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+}
+
+function startOfDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function nextSundayOnOrAfter(d: Date): Date {
+  const result = startOfDay(d);
+  while (result.getDay() !== 0) {
+    result.setDate(result.getDate() + 1);
+  }
+  return result;
+}
+
+// Gregorian Easter computus (Meeus/Jones/Butcher algorithm)
+export function getEasterSunday(year: number): Date {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return startOfDay(new Date(year, month, day));
+}
+
+// First Sunday of Advent: the Sunday on or after 27 November
+function getAdventSunday(year: number): Date {
+  return nextSundayOnOrAfter(new Date(year, 10, 27));
+}
+
+// Baptism of the Lord: the Sunday after the Epiphany (6 January)
+function getBaptismSunday(year: number): Date {
+  const jan6 = startOfDay(new Date(year, 0, 6));
+  const baptism = nextSundayOnOrAfter(jan6);
+  return baptism.getDate() === jan6.getDate() ? addDays(baptism, 7) : baptism;
+}
+
+export interface SeasonPeriod {
+  season: LiturgicalSeason;
+  start: Date;
+  end: Date;
+}
+
+export interface LiturgicalCalendar {
+  currentSeason: LiturgicalSeason;
+  currentPeriod: SeasonPeriod;
+  nextSeason: { season: LiturgicalSeason; start: Date };
+}
+
+interface LiturgicalYear {
+  adventStart: Date;
+  christmasStart: Date;
+  christmasEnd: Date;
+  ot1Start: Date;
+  ashWednesday: Date;
+  palmSunday: Date;
+  easter: Date;
+  easterEnd: Date;
+  ot2Start: Date;
+  adventNext: Date;
+}
+
+// Build the liturgical year that opens with Advent in `lyYear`.
+function buildLiturgicalYear(lyYear: number): LiturgicalYear {
+  const adventStart = getAdventSunday(lyYear);
+  const christmasStart = startOfDay(new Date(lyYear, 11, 25));
+  const christmasEnd = getBaptismSunday(lyYear + 1);
+  const easter = getEasterSunday(lyYear + 1);
+  const ashWednesday = addDays(easter, -46);
+  const palmSunday = addDays(easter, -7);
+  const ot2Start = addDays(easter, 50);
+  const adventNext = getAdventSunday(lyYear + 1);
+
+  return {
+    adventStart,
+    christmasStart,
+    christmasEnd,
+    ot1Start: addDays(christmasEnd, 1),
+    ashWednesday,
+    palmSunday,
+    easter,
+    easterEnd: addDays(easter, 49),
+    ot2Start,
+    adventNext,
+  };
+}
+
+function inRange(d: Date, start: Date, end: Date): boolean {
+  return d.getTime() >= start.getTime() && d.getTime() <= end.getTime();
+}
+
+function periodForDate(d: Date, ly: LiturgicalYear): SeasonPeriod {
+  const ot1End = addDays(ly.ashWednesday, -1);
+  const holyWeekEnd = addDays(ly.easter, -1);
+  const ot2End = addDays(ly.adventNext, -1);
+
+  if (inRange(d, ly.adventStart, addDays(ly.christmasStart, -1))) {
+    return { season: 'Advent', start: ly.adventStart, end: addDays(ly.christmasStart, -1) };
+  }
+  if (inRange(d, ly.christmasStart, ly.christmasEnd)) {
+    return { season: 'Christmas', start: ly.christmasStart, end: ly.christmasEnd };
+  }
+  if (inRange(d, ly.ot1Start, ot1End)) {
+    return { season: 'OrdinaryTime', start: ly.ot1Start, end: ot1End };
+  }
+  if (inRange(d, ly.ashWednesday, addDays(ly.palmSunday, -1))) {
+    return { season: 'Lent', start: ly.ashWednesday, end: addDays(ly.palmSunday, -1) };
+  }
+  if (inRange(d, ly.palmSunday, holyWeekEnd)) {
+    return { season: 'HolyWeek', start: ly.palmSunday, end: holyWeekEnd };
+  }
+  if (inRange(d, ly.easter, ly.easterEnd)) {
+    return { season: 'Easter', start: ly.easter, end: ly.easterEnd };
+  }
+  return { season: 'OrdinaryTime', start: ly.ot2Start, end: ot2End };
+}
+
+export function getLiturgicalCalendar(today: Date = new Date()): LiturgicalCalendar {
+  const t = startOfDay(today);
+  const lyYear = t.getTime() >= getAdventSunday(t.getFullYear()).getTime()
+    ? t.getFullYear()
+    : t.getFullYear() - 1;
+  const ly = buildLiturgicalYear(lyYear);
+
+  const currentPeriod = periodForDate(t, ly);
+  const currentSeason = currentPeriod.season;
+
+  let nextSeason: { season: LiturgicalSeason; start: Date };
+  switch (currentSeason) {
+    case 'Advent':
+      nextSeason = { season: 'Christmas', start: ly.christmasStart };
+      break;
+    case 'Christmas':
+      nextSeason = { season: 'OrdinaryTime', start: ly.ot1Start };
+      break;
+    case 'OrdinaryTime':
+      nextSeason = currentPeriod.start.getTime() === ly.ot2Start.getTime()
+        ? { season: 'Advent', start: ly.adventNext }
+        : { season: 'Lent', start: ly.ashWednesday };
+      break;
+    case 'Lent':
+      nextSeason = { season: 'HolyWeek', start: ly.palmSunday };
+      break;
+    case 'HolyWeek':
+      nextSeason = { season: 'Easter', start: ly.easter };
+      break;
+    case 'Easter':
+      nextSeason = { season: 'OrdinaryTime', start: ly.ot2Start };
+      break;
+  }
+
+  return { currentSeason, currentPeriod, nextSeason };
+}
+
 export function getCurrentLiturgicalSeason(date: Date = new Date()): LiturgicalSeasonDetails {
-  const month = date.getMonth(); // 0-11
-  const day = date.getDate();
-
-  // Advent (Late Nov - Dec 24)
-  if ((month === 10 && day >= 27) || (month === 11 && day <= 24)) {
-    return LITURGICAL_SEASONS_DATA.Advent;
-  }
-  // Christmas (Dec 25 - Jan 12)
-  if ((month === 11 && day >= 25) || (month === 0 && day <= 12)) {
-    return LITURGICAL_SEASONS_DATA.Christmas;
-  }
-  // Lent / Holy Week (Late Feb - Mid April ~ approx)
-  if ((month === 2 && day >= 1) || (month === 3 && day <= 15)) {
-    if (month === 3 && day >= 10 && day <= 16) {
-      return LITURGICAL_SEASONS_DATA.HolyWeek;
-    }
-    return LITURGICAL_SEASONS_DATA.Lent;
-  }
-  // Easter (Mid April - May)
-  if ((month === 3 && day > 15) || (month === 4)) {
-    return LITURGICAL_SEASONS_DATA.Easter;
-  }
-
-  // Default Ordinary Time
-  return LITURGICAL_SEASONS_DATA.OrdinaryTime;
+  return LITURGICAL_SEASONS_DATA[getLiturgicalCalendar(date).currentSeason];
 }
