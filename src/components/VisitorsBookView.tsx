@@ -292,21 +292,21 @@ export const VisitorsBookView: React.FC<VisitorsBookViewProps> = ({ settings }) 
               aria-live="polite"
               className={`p-4 rounded-xl border text-sm font-sans space-y-3 ${
                 isDark
-                  ? 'border-emerald-600/30 bg-emerald-600/10 text-emerald-300'
-                  : 'border-emerald-600/40 bg-emerald-50 text-emerald-900'
+                  ? 'border-amber-500/30 bg-amber-500/10 text-amber-200'
+                  : 'border-amber-600/30 bg-amber-50 text-amber-900'
               }`}
             >
               <p>{notice}</p>
               {submittedDeletionCode && (
                 <div className={`p-3 rounded-lg border space-y-1 ${
                   isDark
-                    ? 'bg-[#24211c]/60 border-[#D4AF37]/40 text-emerald-200'
-                    : 'bg-white border-[#c5a059]/50 text-emerald-800'
+                    ? 'bg-[#24211c]/60 border-[#D4AF37]/40 text-amber-100'
+                    : 'bg-white border-[#c5a059]/50 text-amber-800'
                 }`}>
                   <p className="font-semibold">
                     Deletion code: <span className="font-mono tracking-widest">{submittedDeletionCode}</span>
                   </p>
-                  <p className={`text-xs ${isDark ? 'text-emerald-300/80' : 'text-emerald-700/80'}`}>
+                  <p className={`text-xs ${isDark ? 'text-amber-200/80' : 'text-amber-700/80'}`}>
                     Keep this code safe. You can use it later to remove your message.
                   </p>
                 </div>
@@ -481,7 +481,7 @@ export const VisitorsBookView: React.FC<VisitorsBookViewProps> = ({ settings }) 
             </form>
 
             {removeNotice && (
-              <p role="status" aria-live="polite" className={`mt-3 text-xs font-sans ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>
+              <p role="status" aria-live="polite" className={`mt-3 text-xs font-sans ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
                 {removeNotice}
               </p>
             )}
