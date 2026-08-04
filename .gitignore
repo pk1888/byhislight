@@ -9,3 +9,4 @@ coverage/
 data/sanctuary-events.json
 data/delete-code-secret
 data/clean-shutdown
+data/sanctuary-db.json
