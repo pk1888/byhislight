@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AppSettings } from '../types';
-import { Feather, ShieldAlert, BookOpen } from 'lucide-react';
+import { Feather, ShieldAlert, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface VisitorsBookViewProps {
   settings: AppSettings;
@@ -17,11 +17,15 @@ interface GuestbookMessage {
 const formatEntryDate = (iso: string): string =>
   new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
+const PAGE_SIZE = 6;
+
 export const VisitorsBookView: React.FC<VisitorsBookViewProps> = ({ settings }) => {
   const isDark = settings.theme === 'candlelight' || settings.theme === 'stone';
 
   const [entries, setEntries] = useState<GuestbookMessage[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [page, setPage] = useState<number>(1);
+  const [showRemove, setShowRemove] = useState<boolean>(false);
 
   const [name, setName] = useState<string>('');
   const [country, setCountry] = useState<string>('');
@@ -30,6 +34,12 @@ export const VisitorsBookView: React.FC<VisitorsBookViewProps> = ({ settings }) 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [submittedDeletionCode, setSubmittedDeletionCode] = useState<string | null>(null);
+
+  const [deleteCode, setDeleteCode] = useState<string>('');
+  const [isRemoving, setIsRemoving] = useState<boolean>(false);
+  const [removeNotice, setRemoveNotice] = useState<string | null>(null);
+  const [removeError, setRemoveError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/guestbook')
@@ -38,6 +48,24 @@ export const VisitorsBookView: React.FC<VisitorsBookViewProps> = ({ settings }) 
       .catch(() => {})
       .finally(() => setIsLoading(false));
   }, []);
+
+  useEffect(() => {
+    setPage(p => Math.min(p, Math.max(1, Math.ceil(entries.length / PAGE_SIZE))));
+  }, [entries]);
+
+  const totalPages = Math.max(1, Math.ceil(entries.length / PAGE_SIZE));
+  const currentEntries = entries.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const pageNumbers: (number | 'ellipsis')[] = [];
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+  } else {
+    pageNumbers.push(1);
+    if (page > 3) pageNumbers.push('ellipsis');
+    for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) pageNumbers.push(i);
+    if (page < totalPages - 2) pageNumbers.push('ellipsis');
+    pageNumbers.push(totalPages);
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +94,7 @@ export const VisitorsBookView: React.FC<VisitorsBookViewProps> = ({ settings }) 
       }
 
       setNotice(data.message || 'Thank you. Your message will appear once it has been quietly approved.');
+      setSubmittedDeletionCode(data.deletionCode || null);
       setName('');
       setCountry('');
       setMessage('');
@@ -74,6 +103,40 @@ export const VisitorsBookView: React.FC<VisitorsBookViewProps> = ({ settings }) 
       setError('Could not connect to the chapel. Please try again in a little while.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isRemoving || !deleteCode.trim()) return;
+
+    setIsRemoving(true);
+    setRemoveNotice(null);
+    setRemoveError(null);
+
+    try {
+      const res = await fetch('/api/guestbook/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: deleteCode.trim() })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setRemoveError(data.error || 'That message could not be removed just now. Please try again in a little while.');
+        return;
+      }
+
+      setRemoveNotice(data.message || 'Your message has been removed from the Visitors\' Book.');
+      setDeleteCode('');
+      setSubmittedDeletionCode(null);
+
+      const entriesRes = await fetch('/api/guestbook');
+      if (entriesRes.ok) setEntries(await entriesRes.json());
+    } catch {
+      setRemoveError('Could not connect to the chapel. Please try again in a little while.');
+    } finally {
+      setIsRemoving(false);
     }
   };
 
@@ -168,7 +231,7 @@ export const VisitorsBookView: React.FC<VisitorsBookViewProps> = ({ settings }) 
               rows={4}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              maxLength={200}
+              maxLength={300}
               required
               placeholder="Lord, bring peace to all who visit today..."
               className={`w-full p-4 text-base rounded-xl border transition-all focus:outline-none focus:ring-2 focus:ring-[#c5a059] ${
@@ -178,7 +241,7 @@ export const VisitorsBookView: React.FC<VisitorsBookViewProps> = ({ settings }) 
               }`}
             />
             <div className="text-right text-xs font-mono text-stone-400 mt-1" aria-hidden="true">
-              {message.length}/200
+              {message.length}/300
             </div>
           </div>
 
@@ -216,15 +279,38 @@ export const VisitorsBookView: React.FC<VisitorsBookViewProps> = ({ settings }) 
             }`}>
               Messages are gently reviewed before they appear - thank you for your patience.
             </p>
+            <p className={`text-xs font-sans text-center ${
+              isDark ? 'text-stone-400' : 'text-stone-500'
+            }`}>
+              Need your message removed later? You'll receive a unique deletion code after submitting. Keep it somewhere safe.
+            </p>
           </div>
 
           {notice && (
             <div
               role="status"
               aria-live="polite"
-              className="p-4 rounded-xl border border-emerald-600/30 bg-emerald-600/10 text-emerald-300 text-sm font-sans"
+              className={`p-4 rounded-xl border text-sm font-sans space-y-3 ${
+                isDark
+                  ? 'border-emerald-600/30 bg-emerald-600/10 text-emerald-300'
+                  : 'border-emerald-600/40 bg-emerald-50 text-emerald-900'
+              }`}
             >
-              {notice}
+              <p>{notice}</p>
+              {submittedDeletionCode && (
+                <div className={`p-3 rounded-lg border space-y-1 ${
+                  isDark
+                    ? 'bg-[#24211c]/60 border-[#D4AF37]/40 text-emerald-200'
+                    : 'bg-white border-[#c5a059]/50 text-emerald-800'
+                }`}>
+                  <p className="font-semibold">
+                    Deletion code: <span className="font-mono tracking-widest">{submittedDeletionCode}</span>
+                  </p>
+                  <p className={`text-xs ${isDark ? 'text-emerald-300/80' : 'text-emerald-700/80'}`}>
+                    Keep this code safe. You can use it later to remove your message.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -260,7 +346,7 @@ export const VisitorsBookView: React.FC<VisitorsBookViewProps> = ({ settings }) 
             The book is open and waiting for its first message.
           </p>
         ) : (
-          entries.map(entry => (
+          currentEntries.map(entry => (
             <div
               key={entry.id}
               className={`p-6 sm:p-7 rounded-2xl border shadow-sm ${
@@ -295,6 +381,117 @@ export const VisitorsBookView: React.FC<VisitorsBookViewProps> = ({ settings }) 
               </div>
             </div>
           ))
+        )}
+
+        {totalPages > 1 && (
+          <nav aria-label="Visitors' book pages" className="flex items-center justify-center gap-1.5 pt-4">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              aria-label="Previous page"
+              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
+                page === 1
+                  ? 'text-stone-500 cursor-not-allowed'
+                  : `${isDark ? 'text-stone-300 hover:text-[#c5a059]' : 'text-stone-600 hover:text-[#c5a059]'}`
+              }`}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {pageNumbers.map((n, i) =>
+              n === 'ellipsis' ? (
+                <span key={`e${i}`} className="px-1 text-sm text-stone-500 select-none">...</span>
+              ) : (
+                <button
+                  key={n}
+                  onClick={() => setPage(n)}
+                  aria-current={n === page ? 'page' : undefined}
+                  className={`w-9 h-9 rounded-lg text-sm font-mono transition-all ${
+                    n === page
+                      ? 'bg-[#c5a059] text-stone-950 font-bold'
+                      : `${isDark ? 'text-stone-300 hover:text-[#c5a059]' : 'text-stone-600 hover:text-[#c5a059]'}`
+                  }`}
+                >
+                  {n}
+                </button>
+              )
+            )}
+
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              aria-label="Next page"
+              className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
+                page === totalPages
+                  ? 'text-stone-500 cursor-not-allowed'
+                  : `${isDark ? 'text-stone-300 hover:text-[#c5a059]' : 'text-stone-600 hover:text-[#c5a059]'}`
+              }`}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </nav>
+        )}
+      </div>
+
+      {/* Request removal - quietly at the foot of the page */}
+      <div className="text-center pt-2">
+        <button
+          onClick={() => setShowRemove(s => !s)}
+          aria-expanded={showRemove}
+          aria-controls="guestbook-remove"
+          className={`text-xs font-sans underline-offset-4 hover:underline ${
+            isDark ? 'text-stone-500 hover:text-[#c5a059]' : 'text-stone-400 hover:text-[#c5a059]'
+          }`}
+        >
+          Need a message removed?
+        </button>
+
+        {showRemove && (
+          <div id="guestbook-remove" className="mt-4 max-w-md mx-auto">
+            <form onSubmit={handleDelete} className="flex gap-2">
+              <input
+                id="guestbook-delete-code"
+                type="text"
+                value={deleteCode}
+                onChange={(e) => setDeleteCode(e.target.value)}
+                placeholder="Deletion code"
+                autoComplete="off"
+                spellCheck={false}
+                className={`flex-1 px-3 py-2 text-xs font-mono rounded-lg border transition-all focus:outline-none focus:ring-2 focus:ring-[#c5a059] ${
+                  isDark
+                    ? 'bg-[#24211c] border-[#3a342c] text-[#ece4d6] placeholder-stone-500'
+                    : 'bg-white border-[#ded1be] text-stone-900 placeholder-stone-500'
+                }`}
+              />
+              <button
+                type="submit"
+                disabled={isRemoving || deleteCode.trim().length === 0}
+                className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+                  isRemoving || deleteCode.trim().length === 0
+                    ? 'bg-stone-700 text-stone-400 cursor-not-allowed opacity-60'
+                    : `border ${
+                        isDark
+                          ? 'border-[#c5a059]/50 text-[#c5a059] hover:bg-[#c5a059]/10'
+                          : 'border-[#c5a059] text-[#a8841f] hover:bg-[#c5a059]/10'
+                      }`
+                }`}
+              >
+                {isRemoving ? 'Removing...' : 'Remove'}
+              </button>
+            </form>
+
+            {removeNotice && (
+              <p role="status" aria-live="polite" className={`mt-3 text-xs font-sans ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>
+                {removeNotice}
+              </p>
+            )}
+            {removeError && (
+              <p role="alert" className={`mt-3 text-xs font-sans flex items-start justify-center space-x-1.5 ${isDark ? 'text-rose-300' : 'text-rose-700'}`}>
+                <ShieldAlert className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                <span>{removeError}</span>
+              </p>
+            )}
+          </div>
         )}
       </div>
     </div>

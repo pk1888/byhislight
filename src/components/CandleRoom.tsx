@@ -228,7 +228,7 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            message: intention.trim().slice(0, 200),
+            message: intention.trim().slice(0, 300),
             anonymous: true
           })
         }).catch(() => {});

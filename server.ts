@@ -40,6 +40,7 @@ interface GuestbookEntry {
   createdAt: string;
   approved: boolean;
   ipHash: string;
+  deleteCodeHash?: string;
 }
 
 interface SanctuaryDb {
@@ -716,6 +717,25 @@ function localOnlyAdmin(req: express.Request, res: express.Response, next: expre
   next();
 }
 
+// Deletion codes let visitors remove their own message without accounts or
+// email. The code is random, shown once at submission, stored only hashed.
+const DELETE_CODE_CHARSET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+function generateDeleteCode(): string {
+  const rand = crypto.randomBytes(8);
+  let s = '';
+  for (const b of rand) s += DELETE_CODE_CHARSET[b % DELETE_CODE_CHARSET.length];
+  return `BHL-${s.slice(0, 4)}-${s.slice(4, 8)}`;
+}
+
+function normalizeDeleteCode(code: string): string {
+  return code.toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+function hashDeleteCode(code: string): string {
+  return crypto.createHash('sha256').update(`delete|${normalizeDeleteCode(code)}`).digest('hex');
+}
+
 // POST leave a message (held for quiet approval before appearing)
 app.post('/api/guestbook', (req, res) => {
   const clientIp = req.ip || req.socket.remoteAddress || '127.0.0.1';
@@ -730,12 +750,12 @@ app.post('/api/guestbook', (req, res) => {
     res.status(400).json({ error: 'A short prayer or message is required.' });
     return;
   }
-  if (message.trim().length > 200) {
-    res.status(400).json({ error: 'Please keep your message to 200 characters or fewer.' });
+  if (message.trim().length > 300) {
+    res.status(400).json({ error: 'Please keep your message to 300 characters or fewer.' });
     return;
   }
 
-  const cleanMessage = message.trim().slice(0, 200);
+  const cleanMessage = message.trim().slice(0, 300);
   const cleanName = name && typeof name === 'string' ? name.trim().slice(0, 50) : undefined;
   const cleanCountry = country && typeof country === 'string' ? country.trim().slice(0, 56) : undefined;
 
@@ -745,6 +765,7 @@ app.post('/api/guestbook', (req, res) => {
   }
 
   const isAnonymous = Boolean(anonymous);
+  const deleteCode = generateDeleteCode();
   const db = readDb();
   const entry: GuestbookEntry = {
     id: 'g_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
@@ -754,7 +775,8 @@ app.post('/api/guestbook', (req, res) => {
     anonymous: isAnonymous,
     createdAt: new Date().toISOString(),
     approved: false,
-    ipHash: hashIp(clientIp)
+    ipHash: hashIp(clientIp),
+    deleteCodeHash: hashDeleteCode(deleteCode)
   };
 
   db.guestbook.unshift(entry);
@@ -763,8 +785,42 @@ app.post('/api/guestbook', (req, res) => {
   res.json({
     success: true,
     status: 'pending',
-    message: 'Thank you. Your message has been received and will appear in the Visitors\' Book once it has been quietly approved.'
+    message: 'Thank you. Your message has been received and will appear in the Visitors\' Book once it has been quietly approved.',
+    deletionCode: deleteCode
   });
+});
+
+// POST remove a message using the deletion code shown at submission time
+app.post('/api/guestbook/delete', (req, res) => {
+  const clientIp = req.ip || req.socket.remoteAddress || '127.0.0.1';
+  if (isRateLimited(clientIp, 5, 3600000)) {
+    res.status(429).json({ error: 'Too many removal attempts. Please try again in a little while.' });
+    return;
+  }
+
+  const { code } = req.body;
+  if (!code || typeof code !== 'string' || normalizeDeleteCode(code).length < 8) {
+    res.status(400).json({ error: 'Please enter a valid deletion code.' });
+    return;
+  }
+
+  const targetHash = hashDeleteCode(code);
+  const db = readDb();
+  const index = db.guestbook.findIndex(e => {
+    if (!e.deleteCodeHash) return false;
+    const a = Buffer.from(e.deleteCodeHash, 'hex');
+    const b = Buffer.from(targetHash, 'hex');
+    return a.length === b.length && crypto.timingSafeEqual(a, b);
+  });
+
+  if (index === -1) {
+    res.status(404).json({ error: 'That code does not match any message in the book.' });
+    return;
+  }
+
+  db.guestbook.splice(index, 1);
+  writeDb(db);
+  res.json({ success: true, message: 'Your message has been removed from the Visitors\' Book.' });
 });
 
 // GET approved messages, newest first (never exposes ipHash or moderation state)
