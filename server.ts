@@ -15,6 +15,23 @@ app.use(express.json());
 const DATA_DIR = path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'sanctuary-db.json');
 
+// Secret used to HMAC guestbook deletion codes. Codes stay valid across server
+// restarts, but hashes cannot be forged from the database alone. Set
+// DELETE_SECRET in the environment, or one is generated on first run and kept
+// in a gitignored file.
+const DELETE_CODE_SECRET = (() => {
+  if (process.env.DELETE_SECRET) return process.env.DELETE_SECRET;
+  const secretFile = path.join(DATA_DIR, 'delete-code-secret');
+  try {
+    return fs.readFileSync(secretFile, 'utf8').trim();
+  } catch {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    const secret = crypto.randomBytes(32).toString('hex');
+    fs.writeFileSync(secretFile, secret, { mode: 0o600 });
+    return secret;
+  }
+})();
+
 interface CandleSlot {
   id: number;
   isLit: boolean;
@@ -718,7 +735,9 @@ function localOnlyAdmin(req: express.Request, res: express.Response, next: expre
 }
 
 // Deletion codes let visitors remove their own message without accounts or
-// email. The code is random, shown once at submission, stored only hashed.
+// email. The code is random, shown once at submission, and stored only as an
+// HMAC-SHA256 digest keyed by DELETE_CODE_SECRET, so a leaked database alone
+// cannot be used to forge valid codes.
 const DELETE_CODE_CHARSET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 function generateDeleteCode(): string {
@@ -733,7 +752,7 @@ function normalizeDeleteCode(code: string): string {
 }
 
 function hashDeleteCode(code: string): string {
-  return crypto.createHash('sha256').update(`delete|${normalizeDeleteCode(code)}`).digest('hex');
+  return crypto.createHmac('sha256', DELETE_CODE_SECRET).update(`delete|${normalizeDeleteCode(code)}`).digest('hex');
 }
 
 // POST leave a message (held for quiet approval before appearing)

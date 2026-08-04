@@ -7,3 +7,4 @@ coverage/
 .env*
 !.env.example
 data/sanctuary-events.json
+data/delete-code-secret
