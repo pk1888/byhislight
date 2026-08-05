@@ -151,6 +151,21 @@ const DEFAULT_DB: SanctuaryDb = {
   ]
 };
 
+// The five real altar positions correspond to the five devotional choices.
+// Keep this order aligned with src/data/candles.ts.
+const ALTAR_CANDLE_IDS = [
+  'sacred_heart_jesus',
+  'st_theresa',
+  'sacred_heart_mary',
+  'st_francis',
+  'fifth_figure_tbd'
+];
+
+function altarSlotForCandle(db: SanctuaryDb, candleTypeId: string) {
+  const position = ALTAR_CANDLE_IDS.indexOf(candleTypeId);
+  return db.slots.find(slot => slot.id === (position >= 0 ? position + 1 : 1));
+}
+
 function processCandleQueue(db: SanctuaryDb): boolean {
   let changed = false;
   const now = Date.now();
@@ -185,10 +200,12 @@ function processCandleQueue(db: SanctuaryDb): boolean {
 
   // Fill unlit slots from queue
   while (db.candleQueue.length > 0) {
-    const freeSlot = db.slots.find(s => !s.isLit);
+    const nextItem = db.candleQueue[0];
+    const freeSlot = altarSlotForCandle(db, nextItem.candleTypeId);
     if (!freeSlot) break;
+    if (freeSlot.isLit) break;
 
-    const nextItem = db.candleQueue.shift()!;
+    db.candleQueue.shift();
     freeSlot.isLit = true;
     freeSlot.litAt = now;
     freeSlot.expiresAt = now + 15 * 60 * 1000; // 15 minutes per candle offer
@@ -657,7 +674,9 @@ app.post('/api/candles/light', (req, res) => {
     ? intention.trim().slice(0, 300)
     : undefined;
 
-  const candleType = candleTypeId && typeof candleTypeId === 'string' ? candleTypeId : 'sacred_heart_jesus';
+  const candleType = candleTypeId && typeof candleTypeId === 'string' && ALTAR_CANDLE_IDS.includes(candleTypeId)
+    ? candleTypeId
+    : 'sacred_heart_jesus';
 
   db.recentCandles.unshift({
     id: 'c_' + now,
@@ -669,8 +688,8 @@ app.post('/api/candles/light', (req, res) => {
     db.recentCandles.pop();
   }
 
-  // Find free slot out of 5 physical lights
-  const freeSlot = db.slots.find(s => !s.isLit);
+  // Each devotion belongs to its matching physical altar position.
+  const freeSlot = altarSlotForCandle(db, candleType);
 
   let status: 'lit' | 'queued' = 'lit';
   let assignedSlotId: number | null = null;

@@ -113,6 +113,29 @@ export const BlessingCard: React.FC<BlessingCardProps> = ({ settings, onNavigate
         </div>
       </div>
 
+      {/* Quiet invitation to the real home altar */}
+      <section className="mb-8 w-full max-w-4xl rounded-2xl border border-[#8b682c]/50 bg-gradient-to-r from-[#211810] via-[#1b1916] to-[#211810] px-5 py-5 text-left shadow-lg sm:px-7">
+        <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-amber-500/10 shadow-[0_0_24px_rgba(245,158,11,0.18)]">
+              <FlameVisual size="sm" isLit={true} />
+            </div>
+            <div>
+              <h2 className="font-heading text-xl font-semibold text-[#F5EBD8]">Light a Candle</h2>
+              <p className="mt-1 max-w-xl font-sans text-xs leading-relaxed text-[#C2B7A5] sm:text-sm">
+                Offer a quiet prayer and light a real candle on the home altar in Inverclyde, Scotland.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => onNavigate('candle')}
+            className="shrink-0 rounded-full border border-[#D4AF37]/70 px-5 py-2.5 text-xs font-semibold tracking-wide text-[#F5EBD8] transition-all hover:bg-[#D4AF37]/15 hover:text-white"
+          >
+            Visit the altar
+          </button>
+        </div>
+      </section>
+
       {/* Primary Sanctuary Navigation Grid */}
       <div className="w-full max-w-4xl">
         <h2 className="text-xs uppercase tracking-wider text-[#D4AF37] mb-4 font-semibold text-center">
