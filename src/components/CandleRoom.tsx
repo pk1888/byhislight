@@ -185,6 +185,7 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
   const renderAltarCandle = (num: number) => {
     const slot = slotsDetail.find(s => s.id === num);
     const isLit = Boolean(activeCandlesMap[String(num)] || slot?.isLit);
+    const altarCandle = ALTAR_CANDLES.find(candle => candle.id === slot?.candleTypeId) || ALTAR_CANDLES[num - 1] || ALTAR_CANDLES[0];
     const remainingSec = slot?.remainingSeconds || 0;
     const isLastLit = hasLitInSession && lastOfferStatus === 'lit' && Boolean(slot?.candleTypeId === lastLitCandle.id);
 
@@ -220,12 +221,15 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
         >
           {isLit ? '🕯 Burning' : '🕯 Awaiting Prayer'}
         </div>
+        <div className={`relative z-10 mt-1 max-w-28 text-center text-xs font-heading leading-tight ${isLit ? 'text-amber-100' : isDark ? 'text-stone-300' : 'text-stone-700'}`}>
+          {altarCandle.name}
+        </div>
         {isLit && remainingSec > 0 && (
           <div className="relative z-10 mt-1 text-[11px] font-serif text-amber-300">
             {Math.max(1, Math.ceil(remainingSec / 60))} minute{Math.ceil(remainingSec / 60) === 1 ? '' : 's'} remaining
           </div>
         )}
-        <div className={`relative z-10 mt-1 text-[10px] font-serif italic ${isDark ? 'text-stone-500' : 'text-stone-500'}`}>
+        <div className={`relative z-10 mt-2 text-xs font-serif italic ${isDark ? 'text-stone-300' : 'text-stone-700'}`}>
           {queueLength} {queueLength === 1 ? 'prayer' : 'prayers'} waiting
         </div>
       </div>
