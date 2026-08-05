@@ -5,6 +5,10 @@ import { Dices, RefreshCw, ShieldAlert } from 'lucide-react';
 import { playChapelBell } from '../utils/audio';
 import { ALTAR_CANDLES, AltarCandleOption } from '../data/candles';
 import { DevotionalCandleGraphic } from './DevotionalCandleGraphic';
+import sacredHeartImage from '../assets/images/alter-statues/Sacred Heart.webp';
+import saintTheresaImage from '../assets/images/alter-statues/Saint Theresa.webp';
+import sacredHeartMaryImage from '../assets/images/alter-statues/Heart of Mary.jpg';
+import saintFrancisImage from '../assets/images/alter-statues/Saint Francis.webp';
 
 export interface UserCandleLog {
   id: string;
@@ -21,6 +25,15 @@ export interface CandleSlotDetail {
 }
 
 const CANDLE_DURATION_MS = 15 * 60 * 1000;
+const DEVOTION_IMAGES: Record<string, string> = {
+  sacred_heart_jesus: sacredHeartImage,
+  st_theresa: saintTheresaImage,
+  sacred_heart_mary: sacredHeartMaryImage,
+  st_francis: saintFrancisImage
+};
+
+const devotionImagePosition = (id: string): string =>
+  id === 'sacred_heart_mary' ? 'object-top' : 'object-center';
 
 function estimateQueueMinutes(slots: CandleSlotDetail[], position: number): number {
   const remaining = slots
@@ -72,11 +85,14 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
     } catch {}
     return [];
   });
+  const [virtualCandleLitUntil, setVirtualCandleLitUntil] = useState<number>(0);
 
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedCandleId, setSelectedCandleId] = useState<string | null>(null);
   const [leaveInVisitorsBook, setLeaveInVisitorsBook] = useState<boolean>(false);
+  const [inspectedCandle, setInspectedCandle] = useState<number | null>(null);
+  const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null);
 
   const previewCandle = ALTAR_CANDLES[previewIndex % ALTAR_CANDLES.length];
   const displayedCandle = selectedCandleId
@@ -86,6 +102,9 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
   const activeUserCandles = userCandleLogs.filter(c => nowTs - c.litAt < CANDLE_DURATION_MS);
   const activeUserCount = activeUserCandles.length;
   const candlesLitInPastHour = userCandleLogs.filter(c => nowTs - c.litAt < 60 * 60 * 1000).length;
+  const isVirtualCandleLit = virtualCandleLitUntil > nowTs || activeUserCount > 0;
+  const activePhysicalCount = Object.values(activeCandlesMap).filter(Boolean).length;
+  const numberWords = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five'];
 
   useEffect(() => {
     const update = () => setNowTs(Date.now());
@@ -165,6 +184,7 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
       await new Promise(resolve => setTimeout(resolve, 450));
       setTotalCandles(data.totalCandlesLit);
       setLastLitCandle(chosenCandle);
+      setSelectedCandleId(chosenCandle.id);
       setLastOfferStatus(data.status === 'queued' ? 'queued' : 'lit');
       setLastQueuePosition(data.queuePosition || 0);
       setLastEstimatedMinutes(data.status === 'queued' ? estimateQueueMinutes(slotsDetail, data.queuePosition || 1) : 0);
@@ -188,6 +208,8 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
         litAt: Date.now()
       };
       setUserCandleLogs(prev => [newRecord, ...prev]);
+      setVirtualCandleLitUntil(Date.now() + CANDLE_DURATION_MS);
+      setNowTs(Date.now());
       setIntention('');
       if (settings.quietBell) playChapelBell(0.3);
     } catch {
@@ -203,14 +225,33 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
     const altarCandle = ALTAR_CANDLES[num - 1] || ALTAR_CANDLES[0];
     const remainingSec = slot?.remainingSeconds || 0;
     const isLastLit = hasLitInSession && lastOfferStatus === 'lit' && Boolean(slot?.candleTypeId === lastLitCandle.id);
+    const isInspected = inspectedCandle === num;
 
     return (
-      <div key={num} className="relative flex min-h-[265px] flex-col items-center justify-start px-1 sm:px-2">
+      <div
+        key={num}
+        className="relative flex min-h-[310px] cursor-pointer flex-col items-center justify-start px-1 sm:px-2"
+        onMouseEnter={() => setInspectedCandle(num)}
+        onMouseLeave={() => setInspectedCandle(null)}
+        onClick={() => setInspectedCandle(current => current === num ? null : num)}
+        onKeyDown={event => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            setInspectedCandle(current => current === num ? null : num);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label={`Inspect ${altarCandle.name} candle`}
+      >
         {isLit && (
           <div className="absolute top-1/4 h-32 w-32 rounded-full bg-amber-500/20 blur-3xl animate-pulse" aria-hidden="true" />
         )}
-        <div className="relative z-10 flex h-[175px] w-full items-end justify-center">
-          <div className={`flex origin-bottom flex-col items-center transition-transform duration-700 ${isLit ? isLastLit ? 'scale-[1.3]' : 'scale-[1.2]' : ''}`}>
+        <div className={`relative z-10 flex h-12 max-w-28 flex-col items-center justify-end text-center ${isLit ? 'text-amber-100' : isDark ? 'text-stone-300' : 'text-stone-700'}`}>
+          <span className="text-xs font-heading leading-tight">{altarCandle.name}</span>
+        </div>
+        <div className="relative z-10 flex h-[220px] w-full items-end justify-center">
+          <div className={`flex origin-bottom flex-col items-center transition-transform duration-700 ${isLit ? isLastLit ? 'scale-[1.25]' : 'scale-[1.2]' : ''}`}>
           <div className="relative -mb-3 z-20 flex justify-center">
             <FlameVisual size="lg" isLit={isLit} />
           </div>
@@ -238,17 +279,53 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
         >
           {isLit ? '🕯 Burning' : '🕯 Awaiting Prayer'}
         </div>
-        <div className={`relative z-10 mt-0.5 max-w-28 text-center text-xs font-heading leading-tight ${isLit ? 'text-amber-100' : isDark ? 'text-stone-300' : 'text-stone-700'}`}>
-          {altarCandle.name}
-        </div>
         <div className="relative z-0 mt-0.5 text-center text-[11px] font-serif text-amber-300">
           {isLit && remainingSec > 0
             ? `${Math.max(1, Math.ceil(remainingSec / 60))} min${Math.ceil(remainingSec / 60) === 1 ? '' : 's'} remaining`
             : ''}
         </div>
+        {isLit && (
+          <div className={`relative z-10 mt-1 text-center text-[10px] leading-tight ${isDark ? 'text-stone-400' : 'text-stone-600'}`}>
+            <span className="block font-serif italic">Prayer Intention</span>
+            <span className="block">Held in confidence</span>
+          </div>
+        )}
+        {DEVOTION_IMAGES[altarCandle.id] ? (
+          <button
+            type="button"
+            aria-label={`View ${altarCandle.name} artwork`}
+            onClick={event => { event.stopPropagation(); setLightbox({ src: DEVOTION_IMAGES[altarCandle.id], alt: altarCandle.name }); }}
+            className="relative z-10 mt-4 rounded-full focus:outline-none focus:ring-2 focus:ring-amber-300"
+          >
+            <img
+              src={DEVOTION_IMAGES[altarCandle.id]}
+              alt=""
+              className={`h-[3.25rem] w-[3.25rem] rounded-full border-2 border-amber-200/70 bg-gradient-to-br from-[#f2d98a] via-[#b58a32] to-[#6e4c16] p-1 object-cover ${devotionImagePosition(altarCandle.id)} opacity-95 shadow-[0_0_12px_rgba(212,175,55,0.3)]`}
+            />
+          </button>
+        ) : (
+          <span className="relative z-10 mt-4 flex h-[3.25rem] w-[3.25rem] items-center justify-center rounded-full border-2 border-amber-200/70 bg-gradient-to-br from-[#f2d98a] via-[#b58a32] to-[#6e4c16] text-xl text-[#4a300d] shadow-[0_0_12px_rgba(212,175,55,0.3)]" aria-hidden="true">✝</span>
+        )}
+        {isInspected && (
+          <div className={`absolute bottom-1/2 left-1/2 z-30 w-40 -translate-x-1/2 translate-y-1/2 rounded-xl border px-3 py-2 text-center shadow-xl ${isDark ? 'border-amber-300/40 bg-[#17120e]/95 text-[#f5ebd8]' : 'border-amber-700/30 bg-[#fffaf0]/95 text-stone-900'}`} onClick={event => event.stopPropagation()}>
+            <p className="font-heading text-sm">{altarCandle.name}</p>
+            <p className="mt-1 text-[11px] font-serif">{isLit ? '🕯 Burning' : 'Available now'}</p>
+            {isLit && remainingSec > 0 && <p className="text-[11px] text-amber-600">{Math.max(1, Math.ceil(remainingSec / 60))} minutes remaining</p>}
+            {!isLit && <button type="button" onClick={() => { setSelectedCandleId(altarCandle.id); setInspectedCandle(null); document.getElementById('candle-intention')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }} className="mt-1 text-[11px] font-semibold text-amber-700 underline-offset-2 hover:underline">Choose this devotion</button>}
+          </div>
+        )}
       </div>
     );
   };
+
+  useEffect(() => {
+    if (!lightbox) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setLightbox(null);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, [lightbox]);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:py-12">
@@ -283,19 +360,22 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
           {[1, 2, 3, 4, 5].map(renderAltarCandle)}
         </div>
 
+        <div className="relative z-10 mx-auto -mt-1 w-fit rounded-b-sm border border-[#e6c866]/60 bg-gradient-to-b from-[#e1c15e] via-[#ae852d] to-[#704b16] px-4 py-1.5 text-center shadow-[inset_0_1px_2px_rgba(255,244,180,0.55),0_3px_5px_rgba(20,10,3,0.45)]">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-[#3d280b]">Home Prayer Altar</p>
+          <p className="mt-0.5 font-serif text-[10px] italic text-[#4d330e]">Inverclyde, Scotland</p>
+        </div>
+
         <p className={`relative z-10 mt-5 text-center font-serif text-sm italic ${isDark ? 'text-amber-200' : 'text-amber-900'}`}>
           {queueLength > 0
             ? '🕯 All five altar candles are currently burning.'
-            : Object.values(activeCandlesMap).filter(Boolean).length === 0
+            : activePhysicalCount === 0
             ? '🕯 All five altar candles are available.'
-            : Object.values(activeCandlesMap).filter(Boolean).length === 1
-            ? '🕯 One flame is currently burning in prayer.'
-            : `🕯 ${Object.values(activeCandlesMap).filter(Boolean).length} flames are currently burning in prayer.`}
+            : `${activePhysicalCount === 1 ? '🕯 One prayer is' : `🕯 ${numberWords[activePhysicalCount]} prayers are`} currently being held on the home altar.`}
         </p>
 
-        {queueLength === 0 && Object.values(activeCandlesMap).filter(Boolean).length > 0 && Object.values(activeCandlesMap).filter(Boolean).length < 5 && (
+        {queueLength === 0 && activePhysicalCount > 0 && activePhysicalCount < 5 && (
           <p className={`relative z-10 mt-1 text-center font-serif text-xs italic ${isDark ? 'text-stone-400' : 'text-stone-600'}`}>
-            All other altar candles are available.
+             {numberWords[5 - activePhysicalCount]} {5 - activePhysicalCount === 1 ? 'candle remains' : 'candles remain'} ready for prayer.
           </p>
         )}
 
@@ -310,23 +390,24 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
 
         <div className={`relative z-10 mx-auto mt-7 max-w-xl border-t pt-4 text-center ${isDark ? 'border-amber-500/15 text-stone-500' : 'border-amber-800/15 text-stone-500'}`}>
           <p className="font-serif text-sm italic">
-            🕯 {activeUserCount > 0 ? 'Your virtual candle is burning quietly in the online chapel.' : 'A quiet virtual candle waits here for prayer.'}
+            🕯 {isVirtualCandleLit ? 'Your virtual candle is burning quietly in the online chapel.' : 'A quiet virtual candle waits here for prayer.'}
           </p>
+          {isVirtualCandleLit && <p className="mt-1 text-[11px]">It will remain lit here for fifteen minutes.</p>}
           <div className="mx-auto mt-3 flex max-w-sm items-end justify-center gap-1.5 opacity-75" aria-hidden="true">
             {Array.from({ length: 18 }).map((_, index) => (
               <span
                 key={index}
                 className="relative flex h-10 w-4 flex-col items-center justify-end"
               >
-                <span className={`absolute top-0 h-3 w-2 rounded-full ${
-                  activeUserCount > 0 && index === 0
-                    ? 'bg-amber-200 shadow-[0_0_10px_rgba(252,211,77,0.95)] animate-pulse'
-                    : isDark ? 'bg-amber-900/50' : 'bg-amber-700/25'
+                <span className={`absolute top-0 rounded-full ${
+                  isVirtualCandleLit && index === 0
+                    ? 'h-4 w-3 bg-amber-200 shadow-[0_0_14px_rgba(252,211,77,0.95)] animate-pulse'
+                    : `h-3 w-2 ${isDark ? 'bg-amber-900/50' : 'bg-amber-700/25'}`
                 }`} />
-                <span className={`h-6 w-3 rounded-t-sm rounded-b-[2px] border ${
-                  activeUserCount > 0 && index === 0
-                    ? 'border-amber-300/60 bg-gradient-to-r from-amber-500 via-amber-200 to-amber-600'
-                    : isDark ? 'border-stone-700 bg-stone-700/70' : 'border-stone-400 bg-stone-300'
+                <span className={`rounded-t-sm rounded-b-[2px] border ${
+                  isVirtualCandleLit && index === 0
+                    ? 'h-8 w-4 border-amber-300/60 bg-gradient-to-r from-amber-500 via-amber-200 to-amber-600'
+                    : `h-6 w-3 ${isDark ? 'border-stone-700 bg-stone-700/70' : 'border-stone-400 bg-stone-300'}`
                 }`} />
               </span>
             ))}
@@ -334,7 +415,7 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
           <p className="mt-2 text-[11px]">Every offering is held by a virtual candle here as well as on the altar.</p>
         </div>
 
-        <p className={`relative z-10 mt-5 text-center font-serif text-xs italic ${isDark ? 'text-emerald-200/80' : 'text-emerald-900/80'}`}>
+      <p className={`relative z-10 mt-5 text-center font-serif text-xs italic ${isDark ? 'text-emerald-200/80' : 'text-emerald-900/80'}`}>
           🟢 The home altar is quietly receiving prayers
         </p>
         <p className={`relative z-10 mx-auto mt-4 max-w-xl text-center text-xs leading-relaxed ${isDark ? 'text-stone-400' : 'text-stone-600'}`}>
@@ -374,9 +455,7 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
             <>
               <h2 className="font-heading text-2xl sm:text-3xl">Your candle has been lit.</h2>
               <p className={`mt-4 font-sans leading-relaxed ${isDark ? 'text-stone-300' : 'text-stone-600'}`}>
-                <span className="block">A real flame is now burning</span>
-                <span className="block">on my home altar</span>
-                <span className="block">in Inverclyde, Scotland.</span>
+                Your candle has been entrusted to {lastLitCandle.name} and is now burning on the home altar in Inverclyde, Scotland.
               </p>
               <p className={`mt-3 font-serif italic ${isDark ? 'text-amber-200' : 'text-amber-900'}`}>
                 It will remain lit for fifteen minutes.
@@ -384,10 +463,20 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
               <p className={`mt-5 font-scripture text-lg italic ${isDark ? 'text-[#f5ebd8]' : 'text-stone-800'}`}>
                 May Christ hear the prayer held quietly within your heart.
               </p>
+              {DEVOTION_IMAGES[lastLitCandle.id] && (
+                <img
+                  src={DEVOTION_IMAGES[lastLitCandle.id]}
+                  alt={lastLitCandle.name}
+                  className={`mx-auto mt-6 h-[6.5rem] w-[6.5rem] rounded-full object-cover ${devotionImagePosition(lastLitCandle.id)} shadow-[0_0_22px_rgba(212,175,55,0.35)] ring-1 ring-amber-300/60`}
+                />
+              )}
               <p className="mt-5 font-heading text-lg text-amber-500">{lastLitCandle.name}</p>
+              <p className={`mt-2 font-serif text-sm italic ${isDark ? 'text-amber-200' : 'text-amber-900'}`}>
+                Your prayer has been entrusted to the intercession of {lastLitCandle.name}.
+              </p>
             </>
           )}
-          <button onClick={() => setHasLitInSession(false)} className={`mt-8 text-sm underline-offset-4 hover:underline ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>
+          <button onClick={() => { setHasLitInSession(false); setSelectedCandleId(null); }} className={`mt-8 text-sm underline-offset-4 hover:underline ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>
             Offer another prayer
           </button>
         </section>
@@ -415,6 +504,16 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
             </summary>
             <div className="space-y-5 border-t border-amber-500/20 px-5 pb-5 pt-5">
               <div className="flex flex-col items-center gap-3 text-center">
+                <p className={`font-mono text-[11px] uppercase tracking-[0.18em] ${isDark ? 'text-amber-300' : 'text-amber-800'}`}>
+                  Your Prayer Will Be Entrusted To
+                </p>
+                {selectedCandleId && DEVOTION_IMAGES[displayedCandle.id] && (
+                  <img
+                    src={DEVOTION_IMAGES[displayedCandle.id]}
+                    alt={displayedCandle.name}
+                    className={`h-[6.5rem] w-[6.5rem] rounded-full object-cover ${devotionImagePosition(displayedCandle.id)} shadow-[0_0_20px_rgba(212,175,55,0.35)] ring-1 ring-amber-300/60`}
+                  />
+                )}
                 <DevotionalCandleGraphic candle={displayedCandle} isSelected={Boolean(selectedCandleId)} size="md" />
                 <div>
                   <p className={`font-heading text-lg ${isDark ? 'text-[#f5ebd8]' : 'text-stone-900'}`}>{displayedCandle.name}</p>
@@ -462,6 +561,23 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
             <span>{isSubmitting ? 'Lighting a candle...' : candlesLitInPastHour >= 3 ? 'Please return later' : 'Light a Candle'}</span>
           </button>
         </form>
+      )}
+
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/85 p-6 backdrop-blur-sm"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${lightbox.alt} artwork`}
+          onClick={() => setLightbox(null)}
+        >
+          <img
+            src={lightbox.src}
+            alt={lightbox.alt}
+            className="max-h-[80vh] max-w-[90vw] rounded-2xl object-contain shadow-2xl ring-1 ring-amber-300/50"
+            onClick={event => event.stopPropagation()}
+          />
+        </div>
       )}
 
     </div>

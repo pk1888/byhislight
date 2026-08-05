@@ -24,7 +24,7 @@ export const ALTAR_CANDLES: AltarCandleOption[] = [
   },
   {
     id: 'st_theresa',
-    name: 'St. Theresa (St. Thérèse)',
+    name: 'St. Theresa',
     latinTitle: 'Sancta Teresia a Jesu Infante',
     subtitle: 'The Little Flower of Jesus',
     devotionFocus: 'Simplicity, trust, and spiritual grace',
@@ -57,7 +57,7 @@ export const ALTAR_CANDLES: AltarCandleOption[] = [
   },
   {
     id: 'fifth_figure_tbd',
-    name: '5th Devotion (To Be Decided)',
+    name: '5th Devotion TBD',
     latinTitle: 'Devotio Quinta',
     subtitle: 'Sanctuary Special Intention',
     devotionFocus: 'Reserved for upcoming sacred figure addition',
