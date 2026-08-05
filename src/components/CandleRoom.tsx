@@ -225,6 +225,9 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
             {Math.max(1, Math.ceil(remainingSec / 60))} minute{Math.ceil(remainingSec / 60) === 1 ? '' : 's'} remaining
           </div>
         )}
+        <div className={`relative z-10 mt-1 text-[10px] font-serif italic ${isDark ? 'text-stone-500' : 'text-stone-500'}`}>
+          {queueLength} {queueLength === 1 ? 'prayer' : 'prayers'} waiting
+        </div>
       </div>
     );
   };
@@ -270,10 +273,6 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
             : `${Object.values(activeCandlesMap).filter(Boolean).length} altar candles are burning in prayer.`}
         </p>
 
-        <p className={`relative z-10 mt-4 text-center font-serif text-xs italic ${isDark ? 'text-emerald-200/80' : 'text-emerald-900/80'}`}>
-          🟢 The home altar is quietly receiving prayers
-        </p>
-
         <div className={`relative z-10 mx-auto mt-7 max-w-xl border-t pt-4 text-center ${isDark ? 'border-amber-500/15 text-stone-500' : 'border-amber-800/15 text-stone-500'}`}>
           <p className="font-serif text-sm italic">
             🕯 {activeUserCount > 0 ? 'Your virtual candle is burning quietly in the online chapel.' : 'A quiet virtual candle waits here for prayer.'}
@@ -298,6 +297,19 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
             ))}
           </div>
           <p className="mt-2 text-[11px]">Every offering is held by a virtual candle here as well as on the altar.</p>
+        </div>
+
+        <p className={`relative z-10 mt-5 text-center font-serif text-xs italic ${isDark ? 'text-emerald-200/80' : 'text-emerald-900/80'}`}>
+          🟢 The home altar is quietly receiving prayers
+        </p>
+        <p className={`relative z-10 mx-auto mt-4 max-w-xl text-center text-xs leading-relaxed ${isDark ? 'text-stone-400' : 'text-stone-600'}`}>
+          Each candle burns for fifteen minutes before making room for the next prayer. If all five are burning, your prayer is lovingly placed in the queue and will be next.
+        </p>
+        <div className="relative z-10 mt-5 flex items-center justify-center gap-3">
+          <FlameVisual size="sm" isLit={true} />
+          <span className={`font-mono text-sm font-semibold tracking-wide sm:text-base ${isDark ? 'text-amber-200' : 'text-amber-900'}`}>
+            {totalCandles.toLocaleString()} Candles Offered in Sanctuary
+          </span>
         </div>
       </section>
 
@@ -407,9 +419,6 @@ export const CandleRoom: React.FC<CandleRoomProps> = ({ settings }) => {
         </form>
       )}
 
-      <p className={`mx-auto mt-8 max-w-2xl text-center text-[11px] ${isDark ? 'text-stone-500' : 'text-stone-500'}`}>
-        {totalCandles.toLocaleString()} candles have been offered here over time.
-      </p>
     </div>
   );
 };
