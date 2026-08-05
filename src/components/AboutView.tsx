@@ -455,6 +455,10 @@ export const AboutView: React.FC<AboutViewProps> = ({ settings }) => {
               🕯️ This altar has been quietly serving visitors for {formatUptimeWords(piStatus?.uptimeSeconds ?? healthData.uptimeSeconds)}.
             </p>
 
+            <p className="text-center text-xs font-sans text-stone-500 dark:text-stone-400">
+              For a quiet message: <span className="font-mono text-stone-400 dark:text-stone-300">hello [at] byhislight [dot] faith</span>
+            </p>
+
             <div className="flex flex-wrap justify-between items-center text-xs text-stone-500 dark:text-stone-400 border-t pt-3 border-stone-400/20 font-sans gap-2">
               <span>byhislight.faith</span>
               <div className="flex items-center space-x-3">
