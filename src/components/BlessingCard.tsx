@@ -117,16 +117,37 @@ export const BlessingCard: React.FC<BlessingCardProps> = ({ settings, onNavigate
       </div>
 
       {/* Primary prayer paths */}
-      <section className="w-full max-w-4xl">
-        <h2 className="mb-4 text-center font-heading text-xl text-[#F5EBD8] sm:text-2xl">
+      <section className="mb-10 w-full max-w-4xl">
+        <div className="mb-5 flex items-center justify-center gap-3 text-[#D4AF37]/70">
+          <span className="h-px w-16 bg-[#D4AF37]/30 sm:w-24" />
+          <ChapelCross size={14} />
+          <span className="h-px w-16 bg-[#D4AF37]/30 sm:w-24" />
+        </div>
+        <h2 className="mb-5 text-center font-heading text-xl text-[#F5EBD8] sm:text-2xl">
           Begin your time of prayer
         </h2>
+        <section className="mb-6 w-full rounded-2xl border border-[#b88730]/70 bg-gradient-to-r from-[#2b1d10] via-[#211810] to-[#2b1d10] px-6 py-7 text-left shadow-[0_0_30px_rgba(180,125,35,0.18)] sm:px-8">
+          <div className="flex flex-col items-center gap-5 sm:flex-row sm:justify-between">
+            <div className="flex items-center gap-5">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-amber-500/15 shadow-[0_0_30px_rgba(245,158,11,0.3)]">
+                <FlameVisual size="md" isLit={true} />
+              </div>
+              <div>
+                <h3 className="font-heading text-2xl font-semibold text-[#F5EBD8]">Light a Candle</h3>
+                <p className="mt-1 max-w-xl font-sans text-sm leading-relaxed text-[#C2B7A5]">
+                  Offer a quiet prayer and light a real candle on the home altar in Inverclyde, Scotland.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => onNavigate('candle')}
+              className="shrink-0 rounded-full border border-[#D4AF37]/80 px-6 py-3 text-sm font-semibold tracking-wide text-[#F5EBD8] transition-all hover:bg-[#D4AF37]/15 hover:text-white"
+            >
+              Visit the altar
+            </button>
+          </div>
+        </section>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <button onClick={() => onNavigate('candle')} className="group rounded-2xl border border-[#b88730]/70 bg-gradient-to-br from-[#2b1d10] to-[#1b1916] p-5 text-center text-[#F5EBD8] shadow-lg transition-all hover:border-[#D4AF37] hover:shadow-amber-900/30">
-            <Flame className="mx-auto mb-2 h-6 w-6 text-[#D4AF37] transition-transform group-hover:scale-110" />
-            <span className="block font-heading text-lg font-semibold">Light a Candle</span>
-            <span className="mt-1 block text-xs text-[#C2B7A5]">Offer a prayer on the home altar</span>
-          </button>
           <button onClick={() => onNavigate('gospel')} className="group rounded-2xl border border-[#38332b] bg-[#1b1916] p-5 text-center text-[#F5EBD8] transition-all hover:border-[#D4AF37] hover:bg-[#25221e]">
             <BookOpen className="mx-auto mb-2 h-6 w-6 text-[#D4AF37] transition-transform group-hover:scale-110" />
             <span className="block font-heading text-lg font-semibold">Read Today's Gospel</span>
@@ -140,33 +161,15 @@ export const BlessingCard: React.FC<BlessingCardProps> = ({ settings, onNavigate
         </div>
       </section>
 
-      {/* Quiet invitation to the real home altar */}
-      <section className="mt-10 mb-8 w-full max-w-4xl rounded-2xl border border-[#8b682c]/50 bg-gradient-to-r from-[#211810] via-[#1b1916] to-[#211810] px-5 py-5 text-left shadow-lg sm:px-7">
-        <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-amber-500/10 shadow-[0_0_24px_rgba(245,158,11,0.18)]">
-              <FlameVisual size="sm" isLit={true} />
-            </div>
-            <div>
-              <h2 className="font-heading text-xl font-semibold text-[#F5EBD8]">Light a Candle</h2>
-              <p className="mt-1 max-w-xl font-sans text-xs leading-relaxed text-[#C2B7A5] sm:text-sm">
-                Offer a quiet prayer and light a real candle on the home altar in Inverclyde, Scotland.
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => onNavigate('candle')}
-            className="shrink-0 rounded-full border border-[#D4AF37]/70 px-5 py-2.5 text-xs font-semibold tracking-wide text-[#F5EBD8] transition-all hover:bg-[#D4AF37]/15 hover:text-white"
-          >
-            Visit the altar
-          </button>
-        </div>
-      </section>
-
       {/* Primary Sanctuary Navigation Grid */}
       <div className="w-full max-w-4xl">
-        <h2 className="mb-4 text-center font-heading text-xl text-[#F5EBD8] sm:text-2xl">
-          Chapel Offerings & Prayer Modes
+        <div className="mb-5 flex items-center justify-center gap-3 text-[#D4AF37]/70">
+          <span className="h-px w-16 bg-[#D4AF37]/30 sm:w-24" />
+          <ChapelCross size={14} />
+          <span className="h-px w-16 bg-[#D4AF37]/30 sm:w-24" />
+        </div>
+        <h2 className="mb-5 text-center font-heading text-xl text-[#F5EBD8] sm:text-2xl">
+          Explore the Chapel
         </h2>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
