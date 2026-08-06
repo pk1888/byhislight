@@ -113,8 +113,8 @@ const SAINTS_COLLECTION: Saint[] = [
     month: 1,
     day: 28,
     century: '13th Century',
-    patronage: 'Students, Academics, Theologians, Schools',
-    quote: 'To one who has faith, no explanation is necessary. To one without faith, no explanation is possible.',
+    patronage: 'Students • Universities • Schools • Theologians',
+    quote: 'The things that we love tell us what we are.',
     bio: 'Dominican friar whose Summa Theologiae remains a pillar of Christian philosophy and theology. Despite his immense intellect, he considered all his writings like straw compared to the beauty of God revealed in prayer.',
     prayer: 'Creator of all things, true source of light and wisdom, grant me clarity of mind, strength of memory, and humility of heart to seek and love Your truth above all else. Amen.'
   },

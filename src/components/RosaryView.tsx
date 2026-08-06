@@ -17,6 +17,7 @@ export const RosaryView: React.FC<RosaryViewProps> = ({ settings }) => {
 
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [darkPrayerMode, setDarkPrayerMode] = useState<boolean>(false);
+  const [isComplete, setIsComplete] = useState<boolean>(false);
 
   const currentMysterySet = ROSARY_MYSTERIES[selectedMysteryType];
   const isDark = darkPrayerMode || settings.theme === 'candlelight' || settings.theme === 'stone';
@@ -50,7 +51,7 @@ export const RosaryView: React.FC<RosaryViewProps> = ({ settings }) => {
     stepIndex: sIdx++,
     title: 'Sign of the Cross',
     beadLabel: 'Crucifix',
-    prayerText: 'In the name of the Father, and of the Son, and of the Holy Spirit. Amen.'
+    prayerText: 'In the name of the Father,\nand of the Son,\nand of the Holy Spirit.\n\nAmen.'
   });
 
   const apCreed = CATHOLIC_PRAYERS.find(p => p.id === 'apostles-creed');
@@ -159,7 +160,7 @@ export const RosaryView: React.FC<RosaryViewProps> = ({ settings }) => {
     stepIndex: sIdx++,
     title: 'Concluding Sign of the Cross',
     beadLabel: 'Crucifix',
-    prayerText: 'In the name of the Father, and of the Son, and of the Holy Spirit. Amen.'
+    prayerText: 'In the name of the Father,\nand of the Son,\nand of the Holy Spirit.\n\nAmen.'
   });
 
   const activeStep = steps[currentStep] || steps[0];
@@ -170,6 +171,8 @@ export const RosaryView: React.FC<RosaryViewProps> = ({ settings }) => {
     if (currentStep < totalSteps - 1) {
       if (settings.quietBell) playChapelBell(0.06);
       setCurrentStep(prev => prev + 1);
+    } else {
+      setIsComplete(true);
     }
   };
 
@@ -182,6 +185,7 @@ export const RosaryView: React.FC<RosaryViewProps> = ({ settings }) => {
   const handleRestart = () => {
     if (settings.quietBell) playChapelBell(0.15);
     setCurrentStep(0);
+    setIsComplete(false);
   };
 
   return (
@@ -209,8 +213,9 @@ export const RosaryView: React.FC<RosaryViewProps> = ({ settings }) => {
               <button
                 key={mType}
                 onClick={() => {
-                  setSelectedMysteryType(mType);
-                  setCurrentStep(0);
+                   setSelectedMysteryType(mType);
+                   setCurrentStep(0);
+                   setIsComplete(false);
                   if (settings.quietBell) playChapelBell(0.1);
                 }}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
@@ -249,15 +254,41 @@ export const RosaryView: React.FC<RosaryViewProps> = ({ settings }) => {
           <span>Bead {currentStep + 1} of {totalSteps}</span>
           <span>{progressPercent}% Complete</span>
         </div>
-        <div className="w-full h-1.5 bg-stone-700/30 rounded-full overflow-hidden">
+        <div className="relative w-full h-1.5 bg-stone-700/30 rounded-full">
           <div
             className="h-full bg-[#c5a059] transition-all duration-300 rounded-full"
             style={{ width: `${progressPercent}%` }}
           />
+          <span
+            className="absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 -translate-x-1/2 rounded-full border-2 border-[#f8e7a7] bg-[#c5a059] shadow-[0_0_10px_rgba(212,175,55,0.8)] transition-all duration-300"
+            style={{ left: `${progressPercent}%` }}
+            aria-hidden="true"
+          />
         </div>
       </div>
 
-      {/* Main Bead Card */}
+      {isComplete ? (
+        <section className={`rounded-3xl border px-6 py-16 text-center shadow-md animate-fade-in sm:px-12 ${
+          isDark ? 'bg-[#181614] border-[#2e2a24] text-[#ece4d6]' : 'bg-[#faf6ee] border-[#ebdcc8] text-[#2d2922]'
+        }`}>
+          <ChapelCross size={34} />
+          <h2 className="mt-6 font-heading text-3xl sm:text-4xl">The Rosary is complete.</h2>
+          <p className="mx-auto mt-6 max-w-md font-scripture text-xl leading-relaxed italic">
+            May Our Lady keep you<br />
+            beneath her mantle today.
+          </p>
+          <p className={`mt-8 font-serif text-sm italic ${isDark ? 'text-amber-200' : 'text-amber-900'}`}>
+            Go in peace.
+          </p>
+          <button
+            onClick={handleRestart}
+            className="mt-10 inline-flex items-center gap-2 rounded-full border border-stone-400/30 px-5 py-2.5 text-xs hover:border-[#c5a059] transition-all"
+          >
+            <RotateCcw className="h-3.5 w-3.5" /> Pray the Rosary again
+          </button>
+        </section>
+      ) : (
+      /* Main Bead Card */
       <div className={`p-8 sm:p-12 rounded-3xl border text-center space-y-8 shadow-md transition-all ${
         isDark
           ? 'bg-[#181614] border-[#2e2a24] text-[#ece4d6]'
@@ -322,18 +353,16 @@ export const RosaryView: React.FC<RosaryViewProps> = ({ settings }) => {
           {/* Next Bead */}
           <button
             onClick={handleNext}
-            disabled={currentStep === totalSteps - 1}
             className={`px-6 py-3 rounded-full font-medium text-xs sm:text-sm flex items-center space-x-2 transition-all shadow-sm ${
-              currentStep === totalSteps - 1
-                ? 'bg-stone-600 text-stone-300 cursor-not-allowed'
-                : 'bg-[#c5a059] text-stone-950 hover:bg-[#d4b06a] font-bold'
+              'bg-[#c5a059] text-stone-950 hover:bg-[#d4b06a] font-bold'
             }`}
           >
-            <span>Next Bead</span>
+            <span>{currentStep === totalSteps - 1 ? 'Complete the Rosary' : 'Pray Next Bead'}</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       </div>
+      )}
     </div>
   );
 };

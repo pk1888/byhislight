@@ -41,11 +41,11 @@ export const DailyReflectionView: React.FC<DailyReflectionViewProps> = ({ settin
         </h2>
 
         {/* 2. Scripture */}
-        <div className="space-y-2 max-w-lg mx-auto border-y py-6 border-stone-400/20">
-          <div className="text-xs font-mono uppercase tracking-widest text-[#c5a059]">
+        <div className="space-y-4 max-w-xl mx-auto border-y py-8 border-stone-400/20">
+          <div className="text-sm font-mono uppercase tracking-[0.18em] text-[#c5a059]">
             {reflection.scriptureRef}
           </div>
-          <blockquote className="font-scripture text-lg sm:text-xl italic text-[#f5ebd8] leading-relaxed">
+          <blockquote className="font-scripture text-2xl sm:text-3xl italic text-[#f5ebd8] leading-relaxed sm:leading-[1.7]">
             "{reflection.scriptureText}"
           </blockquote>
         </div>
@@ -61,8 +61,16 @@ export const DailyReflectionView: React.FC<DailyReflectionViewProps> = ({ settin
             {reflection.prayer}
           </p>
         </div>
+
+        <div className={`mx-auto max-w-md border-t pt-5 text-center ${isDark ? 'border-[#38332b]' : 'border-[#ebdcc8]'}`}>
+          <p className={`font-heading text-base ${isDark ? 'text-[#C2B7A5]' : 'text-stone-600'}`}>
+            Tomorrow's Reflection
+          </p>
+          <p className="mt-1 text-xs font-mono uppercase tracking-widest text-[#c5a059]">
+            Available after midnight
+          </p>
+        </div>
       </div>
     </div>
   );
 };
-

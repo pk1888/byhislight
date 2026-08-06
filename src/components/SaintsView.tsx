@@ -39,7 +39,7 @@ export const SaintsView: React.FC<SaintsViewProps> = ({ settings }) => {
           <div>
             <div className="inline-flex items-center space-x-1.5 text-xs font-mono uppercase tracking-widest text-[#c5a059] mb-1 font-semibold">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Today's Featured Saint • Feast Day: {dailySaint.feastDay}</span>
+              <span>Saint of the Day • Feast Day: {dailySaint.feastDay}</span>
             </div>
             <h2 className="font-heading text-3xl sm:text-4xl font-bold mt-1">
               {dailySaint.name}

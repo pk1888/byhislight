@@ -69,6 +69,9 @@ export const BlessingCard: React.FC<BlessingCardProps> = ({ settings, onNavigate
       <p className="font-sans text-xs sm:text-sm italic text-[#C2B7A5]/80 mt-1 tracking-wide font-normal">
         A quiet sanctuary for my Catholic and Christian brothers and sisters.
       </p>
+      <p className="mx-auto mt-4 max-w-2xl font-sans text-xs leading-relaxed tracking-wide text-[#C2B7A5]/90 sm:text-sm">
+        Welcome to a quiet online chapel where you can read today's Gospel, pray the Rosary, light a real candle on my home altar in Scotland, and spend a few peaceful moments with God.
+      </p>
 
       {/* Main Reflective Focus Card */}
       <div className={`mt-8 mb-8 w-full max-w-4xl p-8 sm:p-12 rounded-2xl border transition-all duration-500 shadow-lg relative ${
@@ -113,8 +116,32 @@ export const BlessingCard: React.FC<BlessingCardProps> = ({ settings, onNavigate
         </div>
       </div>
 
+      {/* Primary prayer paths */}
+      <section className="w-full max-w-4xl">
+        <h2 className="mb-4 text-center font-heading text-xl text-[#F5EBD8] sm:text-2xl">
+          Begin your time of prayer
+        </h2>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <button onClick={() => onNavigate('candle')} className="group rounded-2xl border border-[#b88730]/70 bg-gradient-to-br from-[#2b1d10] to-[#1b1916] p-5 text-center text-[#F5EBD8] shadow-lg transition-all hover:border-[#D4AF37] hover:shadow-amber-900/30">
+            <Flame className="mx-auto mb-2 h-6 w-6 text-[#D4AF37] transition-transform group-hover:scale-110" />
+            <span className="block font-heading text-lg font-semibold">Light a Candle</span>
+            <span className="mt-1 block text-xs text-[#C2B7A5]">Offer a prayer on the home altar</span>
+          </button>
+          <button onClick={() => onNavigate('gospel')} className="group rounded-2xl border border-[#38332b] bg-[#1b1916] p-5 text-center text-[#F5EBD8] transition-all hover:border-[#D4AF37] hover:bg-[#25221e]">
+            <BookOpen className="mx-auto mb-2 h-6 w-6 text-[#D4AF37] transition-transform group-hover:scale-110" />
+            <span className="block font-heading text-lg font-semibold">Read Today's Gospel</span>
+            <span className="mt-1 block text-xs text-[#C2B7A5]">Receive the Word quietly</span>
+          </button>
+          <button onClick={() => onNavigate('rosary')} className="group rounded-2xl border border-[#38332b] bg-[#1b1916] p-5 text-center text-[#F5EBD8] transition-all hover:border-[#D4AF37] hover:bg-[#25221e]">
+            <Moon className="mx-auto mb-2 h-6 w-6 text-[#D4AF37] transition-transform group-hover:scale-110" />
+            <span className="block font-heading text-lg font-semibold">Pray the Rosary</span>
+            <span className="mt-1 block text-xs text-[#C2B7A5]">Walk gently through the mysteries</span>
+          </button>
+        </div>
+      </section>
+
       {/* Quiet invitation to the real home altar */}
-      <section className="mb-8 w-full max-w-4xl rounded-2xl border border-[#8b682c]/50 bg-gradient-to-r from-[#211810] via-[#1b1916] to-[#211810] px-5 py-5 text-left shadow-lg sm:px-7">
+      <section className="mt-10 mb-8 w-full max-w-4xl rounded-2xl border border-[#8b682c]/50 bg-gradient-to-r from-[#211810] via-[#1b1916] to-[#211810] px-5 py-5 text-left shadow-lg sm:px-7">
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-amber-500/10 shadow-[0_0_24px_rgba(245,158,11,0.18)]">
@@ -138,41 +165,17 @@ export const BlessingCard: React.FC<BlessingCardProps> = ({ settings, onNavigate
 
       {/* Primary Sanctuary Navigation Grid */}
       <div className="w-full max-w-4xl">
-        <h2 className="text-xs uppercase tracking-wider text-[#D4AF37] mb-4 font-semibold text-center">
+        <h2 className="mb-4 text-center font-heading text-xl text-[#F5EBD8] sm:text-2xl">
           Chapel Offerings & Prayer Modes
         </h2>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-          <button
-            onClick={() => onNavigate('gospel')}
-            className="p-4 rounded-xl border text-center transition-all group bg-[#1b1916] border-[#38332b] hover:border-[#D4AF37] text-[#F5EBD8] hover:bg-[#25221e]"
-          >
-            <BookOpen className="w-5 h-5 mx-auto mb-2 text-[#D4AF37] group-hover:scale-110 transition-transform" />
-            <span className="block text-xs sm:text-sm font-semibold tracking-wide">Today's Gospel</span>
-          </button>
-
           <button
             onClick={() => onNavigate('prayers')}
             className="p-4 rounded-xl border text-center transition-all group bg-[#1b1916] border-[#38332b] hover:border-[#D4AF37] text-[#F5EBD8] hover:bg-[#25221e]"
           >
             <Heart className="w-5 h-5 mx-auto mb-2 text-[#88b392] group-hover:scale-110 transition-transform" />
             <span className="block text-xs sm:text-sm font-semibold tracking-wide">Catholic Prayers</span>
-          </button>
-
-          <button
-            onClick={() => onNavigate('rosary')}
-            className="p-4 rounded-xl border text-center transition-all group bg-[#1b1916] border-[#38332b] hover:border-[#D4AF37] text-[#F5EBD8] hover:bg-[#25221e]"
-          >
-            <Moon className="w-5 h-5 mx-auto mb-2 text-[#D4AF37] group-hover:scale-110 transition-transform" />
-            <span className="block text-xs sm:text-sm font-semibold tracking-wide">Holy Rosary</span>
-          </button>
-
-          <button
-            onClick={() => onNavigate('candle')}
-            className="p-4 rounded-xl border text-center transition-all group bg-[#1b1916] border-[#38332b] hover:border-[#D4AF37] text-[#F5EBD8] hover:bg-[#25221e]"
-          >
-            <Flame className="w-5 h-5 mx-auto mb-2 text-[#D4AF37] group-hover:scale-110 transition-transform" />
-            <span className="block text-xs sm:text-sm font-semibold tracking-wide">Light a Candle</span>
           </button>
 
           <button
@@ -200,11 +203,27 @@ export const BlessingCard: React.FC<BlessingCardProps> = ({ settings, onNavigate
           </button>
 
           <button
+            onClick={() => onNavigate('reflection')}
+            className="p-4 rounded-xl border text-center transition-all group bg-[#1b1916] border-[#38332b] hover:border-[#D4AF37] text-[#F5EBD8] hover:bg-[#25221e]"
+          >
+            <Heart className="w-5 h-5 mx-auto mb-2 text-[#88b392] group-hover:scale-110 transition-transform" />
+            <span className="block text-xs sm:text-sm font-semibold tracking-wide">Daily Reflection</span>
+          </button>
+
+          <button
+            onClick={() => onNavigate('guestbook')}
+            className="p-4 rounded-xl border text-center transition-all group bg-[#1b1916] border-[#38332b] hover:border-[#D4AF37] text-[#F5EBD8] hover:bg-[#25221e]"
+          >
+            <BookOpen className="w-5 h-5 mx-auto mb-2 text-[#D4AF37] group-hover:scale-110 transition-transform" />
+            <span className="block text-xs sm:text-sm font-semibold tracking-wide">Visitors' Book</span>
+          </button>
+
+          <button
             onClick={() => onNavigate('about')}
             className="p-4 rounded-xl border text-center transition-all group bg-[#1b1916] border-[#38332b] hover:border-[#D4AF37] text-[#F5EBD8] hover:bg-[#25221e]"
           >
             <ChapelCross className="w-5 h-5 mx-auto mb-2 text-[#C2B7A5] group-hover:scale-110 transition-transform" />
-            <span className="block text-xs sm:text-sm font-semibold tracking-wide">About By His Light</span>
+            <span className="block text-xs sm:text-sm font-semibold tracking-wide">About the Chapel</span>
           </button>
         </div>
       </div>
