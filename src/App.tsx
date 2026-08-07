@@ -15,6 +15,7 @@ import { SilenceModeView } from './components/SilenceModeView';
 import { AboutView } from './components/AboutView';
 import { FullSanctuaryView } from './components/FullSanctuaryView';
 import { TenCommandmentsView } from './components/TenCommandmentsView';
+import { ScrollToTopButton } from './components/ScrollToTopButton';
 import { pathToView, viewPath, viewTitle } from './utils/routes';
 
 export default function App() {
@@ -134,6 +135,10 @@ export default function App() {
       {/* Footer (hidden in Silence Mode) */}
       {currentView !== 'silence' && (
         <Footer settings={settings} />
+      )}
+
+      {currentView !== 'silence' && (
+        <ScrollToTopButton isDark={isDark} reducedMotion={settings.reducedMotion} />
       )}
     </div>
   );
